@@ -1,16 +1,38 @@
 //! Command-line interface for `cart`.
 //!
-//! Implements the subcommands defined in the technical design section "cart
-//! build tool": `init`, `build`, `run`, `test`, `check`, `clean`, `add`,
-//! `doc`, `install`, and `update`.
+//! Implements the subcommands: `init`, `build`, `run`, `test`, `check`,
+//! `clean`, `add`, `doc`, `install`, and `update`.
 
 use anyhow::Result;
 use clap::{ArgAction, Parser, Subcommand};
+use std::path::PathBuf;
+
+use crate::cmd;
 
 /// The Op build tool and package manager.
 #[derive(Debug, Parser)]
 #[command(name = "cart", version, about, long_about = None)]
 pub struct CartArgs {
+    /// Path to Cart.toml.
+    #[arg(long, global = true)]
+    pub manifest_path: Option<PathBuf>,
+
+    /// Suppress non-error output.
+    #[arg(long, global = true)]
+    pub quiet: bool,
+
+    /// Print extra diagnostic output.
+    #[arg(long, global = true)]
+    pub verbose: bool,
+
+    /// Color output: auto, always, never.
+    #[arg(long, global = true)]
+    pub color: Option<String>,
+
+    /// Error if Cart.lock is out of date.
+    #[arg(long, global = true)]
+    pub frozen: bool,
+
     #[command(subcommand)]
     pub command: Command,
 }
@@ -51,6 +73,9 @@ pub enum Command {
         target: Option<String>,
         #[arg(long)]
         release: bool,
+        /// Select a run profile by name.
+        #[arg(long)]
+        profile: Option<String>,
     },
     /// Run the project's test suite.
     Test {
@@ -65,11 +90,27 @@ pub enum Command {
     /// Remove the build output directory.
     Clean,
     /// Add a bank to the Cart.toml dependencies.
-    Add { bank: String },
+    Add {
+        bank: String,
+        /// Git URL for the bank.
+        #[arg(long)]
+        git: Option<String>,
+        /// Local path for the bank.
+        #[arg(long)]
+        path: Option<String>,
+        /// Version requirement string.
+        #[arg(long)]
+        version: Option<String>,
+    },
     /// Generate documentation from doc comments.
     Doc,
     /// Install a bank in ~/.carts/.
-    Install { bank: String },
+    Install {
+        bank: String,
+        /// Git URL for the bank.
+        #[arg(long)]
+        git: Option<String>,
+    },
     /// Update all dependencies to the latest version.
     Update,
 }
@@ -77,78 +118,43 @@ pub enum Command {
 /// Entry point for the `cart` CLI.
 pub fn run() -> Result<()> {
     let args = CartArgs::parse();
+    let manifest_path = args
+        .manifest_path
+        .unwrap_or_else(|| std::path::PathBuf::from("Cart.toml"));
+
     match args.command {
-        Command::Init { name, bank, target } => init(&name, bank, target),
+        Command::Init { name, bank, target } => cmd::init::init(&name, bank, target),
         Command::Build {
             target,
             release,
             debug,
             features,
             format,
-        } => build(target, release, debug, features, format),
-        Command::Run { target, release } => run_cmd(target, release),
-        Command::Test { target } => test(target),
-        Command::Check { target } => check(target),
-        Command::Clean => clean(),
-        Command::Add { bank } => add(&bank),
-        Command::Doc => doc(),
-        Command::Install { bank } => install(&bank),
-        Command::Update => update(),
+        } => cmd::build::build(
+            &manifest_path,
+            target,
+            release,
+            debug,
+            features,
+            format,
+            args.frozen,
+        ),
+        Command::Run {
+            target,
+            release,
+            profile,
+        } => cmd::run::run(&manifest_path, target, release, profile),
+        Command::Test { target } => cmd::test::test(&manifest_path, target),
+        Command::Check { target } => cmd::check::check(&manifest_path, target),
+        Command::Clean => cmd::clean::clean(&manifest_path),
+        Command::Add {
+            bank,
+            git,
+            path,
+            version,
+        } => cmd::add::add(&manifest_path, &bank, git, path, version),
+        Command::Doc => cmd::doc::doc(&manifest_path),
+        Command::Install { bank, git } => cmd::install::install(&bank, git),
+        Command::Update => cmd::update::update(&manifest_path),
     }
-}
-
-fn init(name: &str, _bank: bool, _target: Option<String>) -> Result<()> {
-    eprintln!("cart init: {name} (not yet implemented)");
-    Ok(())
-}
-
-fn build(
-    _target: Option<String>,
-    _release: bool,
-    _debug: bool,
-    _features: Vec<String>,
-    _format: Option<String>,
-) -> Result<()> {
-    eprintln!("cart build (not yet implemented)");
-    Ok(())
-}
-
-fn run_cmd(_target: Option<String>, _release: bool) -> Result<()> {
-    eprintln!("cart run (not yet implemented)");
-    Ok(())
-}
-
-fn test(_target: Option<String>) -> Result<()> {
-    eprintln!("cart test (not yet implemented)");
-    Ok(())
-}
-
-fn check(_target: Option<String>) -> Result<()> {
-    eprintln!("cart check (not yet implemented)");
-    Ok(())
-}
-
-fn clean() -> Result<()> {
-    eprintln!("cart clean (not yet implemented)");
-    Ok(())
-}
-
-fn add(bank: &str) -> Result<()> {
-    eprintln!("cart add: {bank} (not yet implemented)");
-    Ok(())
-}
-
-fn doc() -> Result<()> {
-    eprintln!("cart doc (not yet implemented)");
-    Ok(())
-}
-
-fn install(bank: &str) -> Result<()> {
-    eprintln!("cart install: {bank} (not yet implemented)");
-    Ok(())
-}
-
-fn update() -> Result<()> {
-    eprintln!("cart update (not yet implemented)");
-    Ok(())
 }

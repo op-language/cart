@@ -1,0 +1,102 @@
+//! `cart init` — create a new Op project.
+
+use crate::manifest::{CartManifest, Package, Rom, TargetSection};
+use anyhow::Result;
+use std::fs;
+use std::path::Path;
+
+const GITIGNORE: &str = "/target\n";
+
+const ROM_ENTRY: &str =
+    "//! {name}\n//!\n//! Project entry point.\n\nnoreturn fn main() {\n    loop {\n    }\n}\n";
+
+const BANK_ENTRY: &str = "//! {name} bank\n//!\n//! Bank entry point.\n";
+
+pub fn init(name: &str, bank: bool, target: Option<String>) -> Result<()> {
+    let project_dir = std::path::PathBuf::from(name);
+    if project_dir.exists() {
+        return Err(anyhow::anyhow!("E502: directory '{}' already exists", name));
+    }
+
+    let default_target = target.unwrap_or_else(|| "mos6502-nintendo-nes-ntsc".to_string());
+
+    fs::create_dir_all(&project_dir)?;
+    fs::create_dir_all(project_dir.join("src"))?;
+    fs::create_dir_all(project_dir.join("tests"))?;
+
+    let manifest = if bank {
+        let entry = BANK_ENTRY.replace("{name}", name);
+        fs::write(project_dir.join("src").join("bank.op"), entry)?;
+
+        CartManifest {
+            package: Package {
+                name: name.to_string(),
+                version: "0.1.0".to_string(),
+                edition: "1".to_string(),
+                authors: Vec::new(),
+                license: None,
+            },
+            bank: Some(crate::manifest::Bank {
+                name: name.to_string(),
+                path: Some("src/bank.op".to_string()),
+            }),
+            rom: Vec::new(),
+            dependencies: Default::default(),
+            dev_dependencies: Default::default(),
+            target: Some(TargetSection {
+                default: default_target.clone(),
+            }),
+            features: None,
+            run: None,
+            test: None,
+            doc: None,
+        }
+    } else {
+        let entry = ROM_ENTRY.replace("{name}", name);
+        fs::write(project_dir.join("src").join("cart.op"), entry)?;
+
+        CartManifest {
+            package: Package {
+                name: name.to_string(),
+                version: "0.1.0".to_string(),
+                edition: "1".to_string(),
+                authors: Vec::new(),
+                license: None,
+            },
+            bank: None,
+            rom: vec![Rom {
+                name: name.to_string(),
+                path: Some("src/cart.op".to_string()),
+                target: default_target.clone(),
+            }],
+            dependencies: Default::default(),
+            dev_dependencies: Default::default(),
+            target: Some(TargetSection {
+                default: default_target,
+            }),
+            features: None,
+            run: None,
+            test: None,
+            doc: None,
+        }
+    };
+
+    manifest.save(&project_dir.join("Cart.toml"))?;
+    fs::write(project_dir.join(".gitignore"), GITIGNORE)?;
+
+    init_git(&project_dir)?;
+
+    eprintln!("Created {name} project in {}", project_dir.display());
+    Ok(())
+}
+
+fn init_git(dir: &Path) -> Result<()> {
+    let result = std::process::Command::new("git")
+        .args(["init", "--quiet"])
+        .current_dir(dir)
+        .status();
+    if let Err(e) = result {
+        eprintln!("warning: git init failed: {e}");
+    }
+    Ok(())
+}
