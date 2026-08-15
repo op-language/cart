@@ -1,14 +1,27 @@
 //! Diagnostic reporting for the `cart` build tool.
 //!
-//! A [`Diagnostic`] has a severity, a file path, a line, a column, a message,
-//! and an optional list of related spans. The `cart` tool prints diagnostics
-//! to stderr in the format defined in the technical design section "Error
-//! handling".
+//! A [`Diagnostic`] has a severity, a file path, a line, a column, a
+//! message, and an error code. The `cart` tool prints diagnostics to stderr
+//! in the structured format.
 //!
 //! The `EXXX` code is a three-digit number. The first digit names the stage:
 //! 5 = cart.
 
 use serde::{Deserialize, Serialize};
+
+/// Error codes for the `cart` build tool.
+pub mod codes {
+    pub const EMULATOR_NOT_FOUND: u32 = 501;
+    pub const MANIFEST_PARSE: u32 = 502;
+    pub const TRIPLET_MALFORMED: u32 = 503;
+    pub const DEP_RESOLUTION: u32 = 504;
+    pub const LIB_NOT_INSTALLED: u32 = 505;
+    pub const LOCKFILE_OUT_OF_DATE: u32 = 506;
+    pub const BUILD_FAILURE: u32 = 507;
+    pub const TEST_FAILURE: u32 = 508;
+    pub const CHECKSUM_MISMATCH: u32 = 509;
+    pub const GIT_FAILURE: u32 = 510;
+}
 
 /// The severity of a diagnostic.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -59,10 +72,7 @@ impl Diagnostic {
             Severity::Warning => "warning",
             Severity::Note => "note",
         };
-        eprintln!(
-            "{}[E{:03}]: {}",
-            level, self.code, self.message
-        );
+        eprintln!("{}[E{:03}]: {}", level, self.code, self.message);
         eprintln!("  --> {}:{}:{}", self.file, self.line, self.col);
         eprintln!("   |");
         if let Some(line) = source {

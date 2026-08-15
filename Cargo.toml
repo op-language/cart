@@ -1,6 +1,6 @@
 [package]
 name = "cart"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 authors = ["Dave Grantham <dwg@linuxprogrammer.org>"]
 license = "Apache-2.0"
@@ -12,6 +12,10 @@ description = "The Op build tool and package manager"
 name = "cart"
 path = "src/main.rs"
 
+[lib]
+name = "cart"
+path = "src/lib.rs"
+
 [dependencies]
 clap = { version = "4", features = ["derive"] }
 serde = { version = "1", features = ["derive"] }
@@ -19,3 +23,10 @@ serde_json = "1"
 toml = "1"
 anyhow = "1"
 thiserror = "2"
+semver = "1"
+git2 = "0.18"
+sha2 = "0.10"
+tempfile = "3"
+
+[dev-dependencies]
+tempfile = "3"
