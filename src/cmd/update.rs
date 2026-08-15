@@ -20,7 +20,7 @@ pub fn update(manifest_path: &Path) -> Result<()> {
         }
 
         let source = registry::resolve_source(name, dep, config.default_git_base())?;
-        eprintln!("Updating bank '{}'...", name);
+        eprintln!("Updating lib '{name}'...");
         match registry::update(name, &source, &carts_dir) {
             Ok(result) => {
                 eprintln!(

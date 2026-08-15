@@ -1,6 +1,6 @@
 //! `cart init` — create a new Op project.
 
-use crate::manifest::{CartManifest, Package, Rom, TargetSection};
+use crate::manifest::{CartManifest, Lib, Package, Rom, TargetSection};
 use anyhow::Result;
 use std::fs;
 use std::path::Path;
@@ -10,9 +10,9 @@ const GITIGNORE: &str = "/target\n";
 const ROM_ENTRY: &str =
     "//! {name}\n//!\n//! Project entry point.\n\nnoreturn fn main() {\n    loop {\n    }\n}\n";
 
-const BANK_ENTRY: &str = "//! {name} bank\n//!\n//! Bank entry point.\n";
+const LIB_ENTRY: &str = "//! {name} lib\n//!\n//! Lib entry point.\n";
 
-pub fn init(name: &str, bank: bool, target: Option<String>) -> Result<()> {
+pub fn init(name: &str, lib: bool, target: Option<String>) -> Result<()> {
     let project_dir = std::path::PathBuf::from(name);
     if project_dir.exists() {
         return Err(anyhow::anyhow!("E502: directory '{}' already exists", name));
@@ -24,9 +24,9 @@ pub fn init(name: &str, bank: bool, target: Option<String>) -> Result<()> {
     fs::create_dir_all(project_dir.join("src"))?;
     fs::create_dir_all(project_dir.join("tests"))?;
 
-    let manifest = if bank {
-        let entry = BANK_ENTRY.replace("{name}", name);
-        fs::write(project_dir.join("src").join("bank.op"), entry)?;
+    let manifest = if lib {
+        let entry = LIB_ENTRY.replace("{name}", name);
+        fs::write(project_dir.join("src").join("lib.op"), entry)?;
 
         CartManifest {
             package: Package {
@@ -36,9 +36,9 @@ pub fn init(name: &str, bank: bool, target: Option<String>) -> Result<()> {
                 authors: Vec::new(),
                 license: None,
             },
-            bank: Some(crate::manifest::Bank {
+            lib: Some(Lib {
                 name: name.to_string(),
-                path: Some("src/bank.op".to_string()),
+                path: Some("src/lib.op".to_string()),
             }),
             rom: Vec::new(),
             dependencies: Default::default(),
@@ -63,7 +63,7 @@ pub fn init(name: &str, bank: bool, target: Option<String>) -> Result<()> {
                 authors: Vec::new(),
                 license: None,
             },
-            bank: None,
+            lib: None,
             rom: vec![Rom {
                 name: name.to_string(),
                 path: Some("src/cart.op".to_string()),

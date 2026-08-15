@@ -25,10 +25,10 @@ pub fn check(manifest_path: &Path, target: Option<String>) -> Result<()> {
         let input = if manifest.rom.is_empty() {
             manifest_path.parent().unwrap_or(Path::new(".")).join(
                 manifest
-                    .bank
+                    .lib
                     .as_ref()
                     .and_then(|b| b.path.as_deref())
-                    .unwrap_or("src/bank.op"),
+                    .unwrap_or("src/lib.op"),
             )
         } else {
             manifest_path.parent().unwrap_or(Path::new(".")).join(

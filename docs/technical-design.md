@@ -6,7 +6,7 @@ This document defines the technical design of the `cart` build tool and
 package manager. The `cart` tool manages Op projects the same way `cargo`
 manages Rust projects. It reads and writes the `Cart.toml` manifest,
 resolves dependencies from `~/.carts/`, invokes `opc` to compile projects,
-and installs banks from a git-based registry.
+and installs libs from a git-based registry.
 
 This document uses the keywords **must**, **shall**, and **may** as RFC
 2119 defines.
@@ -40,12 +40,12 @@ current code is a skeleton. The implementation work follows this document.
 2. The `cart` tool must be a single binary that runs on Linux, macOS, and
    Windows.
 3. The `cart` tool must invoke the `opc` compiler to build projects.
-4. The `cart` tool must install banks in `~/.carts/` and resolve
+4. The `cart` tool must install libs in `~/.carts/` and resolve
    dependencies from that directory.
 5. The `cart` tool must read and write the `Cart.toml` manifest.
 6. The `cart` tool must write and read a `Cart.lock` lockfile for
    reproducible builds.
-7. The `cart` tool must support a git-based registry for bank
+7. The `cart` tool must support a git-based registry for lib
    installation.
 8. The `cart` tool must read a global config in `~/.cart/config.toml`.
 9. The `cart` tool must launch the configured emulator for `cart run` and
@@ -69,7 +69,7 @@ cart binary
   +-- config       ~/.cart/config.toml types and precedence merge
   +-- triplet      target triplet parser
   +-- resolver     dependency graph resolver
-  +-- registry     git clone and pull for bank installation
+  +-- registry     git clone and pull for lib installation
   +-- opc          opc invocation and diagnostic parsing
   +-- diagnostics  error and warning reporting
   +-- cmd/
@@ -81,7 +81,7 @@ cart binary
        +-- clean   remove target directory
        +-- add     add a dependency
        +-- doc     generate Markdown documentation
-       +-- install install a bank
+       +-- install install a lib
        +-- update  update all dependencies
 ```
 
@@ -119,17 +119,17 @@ with the given name. Inside the directory it creates a git repository, a
 `Cart.toml` manifest, a `.gitignore` file, a `src/` directory, and a
 `tests/` directory.
 
-When the user does not pass `--bank`, the command creates a ROM project.
+When the user does not pass `--lib`, the command creates a ROM project.
 The entry file is `src/cart.op`. The `Cart.toml` has one `[[rom]]` section.
 
-When the user passes `--bank`, the command creates a bank project. The
-entry file is `src/bank.op`. The `Cart.toml` has one `[bank]` section.
+When the user passes `--lib`, the command creates a lib project. The
+entry file is `src/lib.op`. The `Cart.toml` has one `[lib]` section.
 
 Options:
 
 | Flag | Description |
 |------|-------------|
-| `--bank` | Create a library (bank) project with `src/bank.op`. |
+| `--lib` | Create a library (lib) project with `src/lib.op`. |
 | `--target <triplet>` | Set the default target triplet in `Cart.toml`. |
 
 ROM project `Cart.toml` template:
@@ -168,7 +168,7 @@ noreturn fn main() {
 }
 ```
 
-Bank project `Cart.toml` template:
+Lib project `Cart.toml` template:
 
 ```toml
 [package]
@@ -178,19 +178,19 @@ edition = "1"
 authors = []
 license = ""
 
-[bank]
+[lib]
 name = "<name>"
-path = "src/bank.op"
+path = "src/lib.op"
 
 [dependencies]
 
 [features]
 ```
 
-Bank project `src/bank.op` template:
+Lib project `src/lib.op` template:
 
 ```op
-//! <name> bank
+//! <name> lib
 //!
 //! Bank entry point.
 ```
@@ -290,7 +290,7 @@ Options:
 
 For each file in `tests/*.op`, the command builds a test ROM. It passes
 `--cfg test` to `opc` so that the `#[cfg(feature = "test")]` predicate
-selects test code. It links a sentinel stub from the std bank or from the
+selects test code. It links a sentinel stub from the std lib or from the
 `[test]` config. It runs the ROM in the emulator that the test profile
 names.
 
@@ -369,22 +369,22 @@ remove `Cart.lock` or any files in `~/.carts/`.
 ### cart add
 
 ```
-cart add [OPTIONS] <bank>
+cart add [OPTIONS] <name>
 ```
 
-The `cart add` command adds a bank to the `Cart.toml` `[dependencies]`
-section. It fetches and installs the bank into `~/.carts/`.
+The `cart add` command adds a lib to the `Cart.toml` `[dependencies]`
+section. It fetches and installs the lib into `~/.carts/`.
 
 Options:
 
 | Flag | Description |
 |------|-------------|
-| `--git <URL>` | Git URL for the bank. |
-| `--path <PATH>` | Local path for the bank. |
+| `--git <URL>` | Git URL for the lib. |
+| `--path <PATH>` | Local path for the lib. |
 | `--version <REQ>` | Version requirement string. |
 
-The command modifies `Cart.toml` in place. It adds the bank entry to the
-`[dependencies]` section. It then fetches and installs the bank.
+The command modifies `Cart.toml` in place. It adds the lib entry to the
+`[dependencies]` section. It then fetches and installs the lib.
 
 ### cart doc
 
@@ -407,13 +407,13 @@ module file has a heading with the module path and the doc text.
 ### cart install
 
 ```
-cart install <bank>
+cart install <name>
 ```
 
-The `cart install` command fetches a bank from the registry and installs
-it in `~/.carts/<bank>/`. It does not modify `Cart.toml`.
+The `cart install` command fetches a lib from the registry and installs
+it in `~/.carts/<name>/`. It does not modify `Cart.toml`.
 
-The command clones the bank repository into `~/.carts/<bank>/`. If the
+The command clones the lib repository into `~/.carts/<name>/`. If the
 directory already exists, it pulls the latest changes instead.
 
 ### cart update
@@ -442,9 +442,9 @@ edition = "1"
 authors = ["Dave Grantham <dwg@linuxprogrammer.org>"]
 license = "Apache-2.0"
 
-[bank]
+[lib]
 name = "nes-demo-lib"
-path = "src/bank.op"
+path = "src/lib.op"
 
 [[rom]]
 name = "nes-demo"
@@ -452,8 +452,8 @@ path = "src/cart.op"
 target = "mos6502-nintendo-nes-ntsc"
 
 [dependencies]
-mos6502-bank = "1.0"
-nes-bank = { version = "1.0", git = "https://github.com/op-language/nes-bank" }
+mos6502 = "1.0"
+nes = { version = "1.0", git = "https://github.com/op-language/nes" }
 std = { path = "../std" }
 
 [dev-dependencies]
@@ -494,15 +494,15 @@ pass_value = 0xFF
 | `authors` | list of strings | no | Author names. |
 | `license` | string | no | SPDX license identifier. |
 
-### [bank]
+### [lib]
 
-Defines a library (bank) target. A project may have at most one `[bank]`
+Defines a library (lib) target. A project may have at most one `[lib]`
 section.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `name` | string | yes | Bank name. |
-| `path` | string | no | Root source file. Default: `src/bank.op`. |
+| `name` | string | yes | Lib name. |
+| `path` | string | no | Root source file. Default: `src/lib.op`. |
 
 ### [[rom]]
 
@@ -517,14 +517,14 @@ sections for different targets.
 
 ### [dependencies]
 
-Lists the banks that the project depends on. Each entry has one of these
+Lists the libs that the project depends on. Each entry has one of these
 forms:
 
 ```toml
 [dependencies]
 std = "1.0"
-nes-bank = { version = "1.0", git = "https://github.com/op-language/nes-bank" }
-my-bank = { path = "../my-bank" }
+nes = { version = "1.0", git = "https://github.com/op-language/nes" }
+my-lib = { path = "../my-lib" }
 ```
 
 The simple form is a version requirement string:
@@ -538,7 +538,7 @@ The detailed form is a table with these fields:
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `version` | string | no | Version requirement string. |
-| `git` | string | no | Git URL for the bank. |
+| `git` | string | no | Git URL for the lib. |
 | `branch` | string | no | Git branch. Default: the default branch. |
 | `tag` | string | no | Git tag. |
 | `rev` | string | no | Git commit SHA. |
@@ -549,7 +549,7 @@ The detailed form is a table with these fields:
 
 A dependency must specify `version`, `git`, or `path`. If `git` is present
 without `version`, the command uses the latest commit on the default
-branch. If `path` is present, the command uses the bank at that path
+branch. If `path` is present, the command uses the lib at that path
 without git operations.
 
 ### [dev-dependencies]
@@ -572,7 +572,7 @@ with a list of sub-features and optional dependencies.
 [features]
 debug = []
 undocumented = []
-audio = ["nes-bank/audio"]
+audio = ["nes/audio"]
 ```
 
 ### [[run.profile]]
@@ -631,9 +631,9 @@ source = { git = "https://github.com/op-language/std", sha = "abc123" }
 checksum = "e3b0c44298fc1c149afbf4c8996fb924"
 
 [[package]]
-name = "nes-bank"
+name = "nes"
 version = "1.0.0"
-source = { path = "../nes-bank" }
+source = { path = "../nes" }
 checksum = "d41d8cd98f00b204e9800998ecf8427e"
 ```
 
@@ -642,10 +642,10 @@ checksum = "d41d8cd98f00b204e9800998ecf8427e"
 | Field | Type | Description |
 |-------|------|-------------|
 | `version` | integer | Lockfile format version. Current: `1`. |
-| `name` | string | Bank name. |
-| `version` | string | Resolved bank version. |
-| `source` | table | Source of the bank. |
-| `checksum` | string | SHA-256 hash of the bank source tree. |
+| `name` | string | Lib name. |
+| `version` | string | Resolved lib version. |
+| `source` | table | Source of the lib. |
+| `checksum` | string | SHA-256 hash of the lib source tree. |
 
 The `source` table has one of these forms:
 
@@ -657,15 +657,15 @@ The `source` table has one of these forms:
 1. Read `Cart.toml` dependencies.
 2. For each dependency, locate it in `~/.carts/<name>/`. Clone it if it is
    missing. Use the `git` URL from `Cart.toml`.
-3. Read the bank `Cart.toml` at `~/.carts/<name>/Cart.toml`. Get the bank
+3. Read the lib `Cart.toml` at `~/.carts/<name>/Cart.toml`. Get the lib
    version from the `[package]` section.
 4. Match the version requirement from the project `Cart.toml` against the
-   bank version. Use semver range matching.
-5. Read the bank dependencies recursively. Resolve each one the same way.
+   lib version. Use semver range matching.
+5. Read the lib dependencies recursively. Resolve each one the same way.
 6. Detect cycles. If a cycle exists, report error E504.
 7. Build the resolved graph.
 8. Compute the SHA-256 checksum for each package. Hash the file contents of
-   the bank source tree.
+   the lib source tree.
 9. Write `Cart.lock`.
 
 ### Frozen mode
@@ -677,27 +677,27 @@ lockfile in frozen mode.
 
 ## ~/.carts/ layout
 
-Each bank lives in `~/.carts/<name>/`. The directory is a git clone of the
-bank repository. It contains the bank `Cart.toml` and the `src/` directory.
+Each lib lives in `~/.carts/<name>/`. The directory is a git clone of the
+lib repository. It contains the lib `Cart.toml` and the `src/` directory.
 
 ```
 ~/.carts/
   std/
     Cart.toml
     src/
-      bank.op
+      lib.op
       cpu.op
       machine.op
       ...
-  nes-bank/
+  nes/
     Cart.toml
     src/
-      bank.op
+      lib.op
       ...
 ```
 
-The `cart` tool never edits the contents of a bank directory. It only
-clones and pulls. The `.git` directory stays in each bank directory so
+The `cart` tool never edits the contents of a lib directory. It only
+clones and pulls. The `.git` directory stays in each lib directory so
 that `cart update` can run git fetch and git checkout.
 
 ## ~/.cart/config.toml config
@@ -761,7 +761,7 @@ lower level.
 
 ## Dependency resolution
 
-The resolver walks the dependency graph. It reads each bank `Cart.toml`,
+The resolver walks the dependency graph. It reads each lib `Cart.toml`,
 matches version requirements, detects cycles, and builds a resolved graph.
 
 ### Algorithm
@@ -773,16 +773,16 @@ matches version requirements, detects cycles, and builds a resolved graph.
    b. If the entry has `git`, clone the repository into
       `~/.carts/<name>/` if it is absent. If the directory exists, use it
       as-is.
-   c. If the entry has only `version`, look for the bank in
+   c. If the entry has only `version`, look for the lib in
       `~/.carts/<name>/`. If it is absent, clone from the registry default
       git base.
-3. Read the bank `Cart.toml` at the resolved location. Get the bank
+3. Read the lib `Cart.toml` at the resolved location. Get the lib
    version from `[package]` `version`.
-4. Match the version requirement against the bank version. Use semver
+4. Match the version requirement against the lib version. Use semver
    range matching. If the version does not match, report error E504.
-5. Read the bank `[dependencies]` recursively. Resolve each one.
+5. Read the lib `[dependencies]` recursively. Resolve each one.
 6. Detect cycles. Maintain a visited set during the walk. If the walk
-   reaches a bank that is already in the visited set, report error E504.
+   reaches a lib that is already in the visited set, report error E504.
 7. Collect all resolved packages into a graph.
 8. Compute the SHA-256 checksum for each package.
 9. Write `Cart.lock`.
@@ -790,7 +790,7 @@ matches version requirements, detects cycles, and builds a resolved graph.
 ### Semver range matching
 
 The version requirement string uses semver range syntax. The `semver`
-crate parses the requirement and matches it against the bank version.
+crate parses the requirement and matches it against the lib version.
 
 | Requirement | Matches |
 |-------------|--------|
@@ -804,13 +804,13 @@ crate parses the requirement and matches it against the bank version.
 ## Registry protocol
 
 The registry uses git only. The `cart install <name>` command clones the
-bank repository into `~/.carts/<name>/`.
+lib repository into `~/.carts/<name>/`.
 
 ### Install flow
 
 1. Determine the git URL. If the dependency entry in `Cart.toml` has a
    `git` field, use that URL. If not, form the URL from the registry
-   `default-git-base` and the bank name: `<base>/<name>`.
+   `default-git-base` and the lib name: `<base>/<name>`.
 2. If `~/.carts/<name>/` exists, pull the latest changes with `git fetch`
    and `git checkout`.
 3. If `~/.carts/<name>/` does not exist, clone the repository with `git
@@ -870,8 +870,8 @@ The `cart doc` command walks the module tree and writes Markdown files.
 
 ### Module walk
 
-1. Start at the root source file. For a bank project, the root is
-   `src/bank.op`. For a ROM project, the root is the `[[rom]]` `path`.
+1. Start at the root source file. For a lib project, the root is
+   `src/lib.op`. For a ROM project, the root is the `[[rom]]` `path`.
 2. Parse the file. Find all `///` and `//!` doc comments.
 3. For each `//!` module doc comment, write a module preamble.
 4. For each `///` doc comment, find the declaration that follows it. Write
@@ -959,7 +959,7 @@ A conforming `cart` implementation must:
 1. Implement all 10 subcommands: `init`, `build`, `run`, `test`, `check`,
    `clean`, `add`, `doc`, `install`, and `update`.
 2. Read and write the `Cart.toml` format as this document defines.
-3. Install banks in `~/.carts/` via git clone.
+3. Install libs in `~/.carts/` via git clone.
 4. Resolve dependencies from `~/.carts/` before invoking `opc`.
 5. Write and read the `Cart.lock` lockfile as this document defines.
 6. Support the `~/.cart/config.toml` config file.
@@ -973,9 +973,9 @@ A conforming `cart` implementation must:
 
 The following items are deferred. A future revision may define them.
 
-1. A central registry index for banks beyond git URLs.
+1. A central registry index for libs beyond git URLs.
 2. Language server protocol support for editor integration.
-3. `cart publish` for publishing banks to a registry.
+3. `cart publish` for publishing libs to a registry.
 4. Workspace support for multi-project repositories.
 5. Run profile inheritance from global config to project config.
 6. A test framework DSL beyond the sentinel mechanism.

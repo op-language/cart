@@ -1,12 +1,12 @@
-//! Git-based registry for bank installation.
+//! Git-based registry for lib installation.
 //!
-//! The registry uses git only. The `cart install` command clones a bank
+//! The registry uses git only. The `cart install` command clones a lib
 //! repository into `~/.carts/<name>/`. The `cart update` command pulls the
 //! latest changes.
 
 use std::path::{Path, PathBuf};
 
-/// The source specification for a bank.
+/// The source specification for a lib.
 #[derive(Debug, Clone)]
 pub struct GitSource {
     pub url: String,
@@ -22,7 +22,7 @@ pub struct InstallResult {
     pub sha: String,
 }
 
-/// Install a bank from a git source into `~/.carts/<name>/`. If the
+/// Install a lib from a git source into `~/.carts/<name>/`. If the
 /// directory already exists, pull the latest changes instead.
 pub fn install(name: &str, source: &GitSource, carts_dir: &Path) -> anyhow::Result<InstallResult> {
     let dest = carts_dir.join(name);
@@ -33,13 +33,13 @@ pub fn install(name: &str, source: &GitSource, carts_dir: &Path) -> anyhow::Resu
     }
 }
 
-/// Update a bank in `~/.carts/<name>/` by fetching and checking out the
+/// Update a lib in `~/.carts/<name>/` by fetching and checking out the
 /// resolved ref.
 pub fn update(name: &str, source: &GitSource, carts_dir: &Path) -> anyhow::Result<InstallResult> {
     let dest = carts_dir.join(name);
     if !dest.exists() {
         return Err(anyhow::anyhow!(
-            "E510: bank '{}' not found in {}",
+            "E510: lib '{}' not found in {}",
             name,
             carts_dir.display()
         ));

@@ -34,14 +34,14 @@ name = "test"
 version = "0.1.0"
 
 [dependencies]
-nes-bank = { version = "1.0", git = "https://github.com/op/nes-bank", branch = "main", features = ["audio"], optional = true }
+nes = { version = "1.0", git = "https://github.com/op/nes", branch = "main", features = ["audio"], optional = true }
 "#;
     let manifest = CartManifest::from_toml(text).expect("parse");
-    let dep = &manifest.dependencies["nes-bank"];
+    let dep = &manifest.dependencies["nes"];
     match dep {
         Dependency::Detailed(d) => {
             assert_eq!(d.version.as_deref(), Some("1.0"));
-            assert_eq!(d.git.as_deref(), Some("https://github.com/op/nes-bank"));
+            assert_eq!(d.git.as_deref(), Some("https://github.com/op/nes"));
             assert_eq!(d.branch.as_deref(), Some("main"));
             assert_eq!(d.features, vec!["audio"]);
             assert!(d.optional);

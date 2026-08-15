@@ -25,18 +25,18 @@ pub fn doc(manifest_path: &Path) -> Result<()> {
 
     fs::create_dir_all(&output_dir)?;
 
-    let root_file = if let Some(bank) = &manifest.bank {
+    let root_file = if let Some(lib) = &manifest.lib {
         manifest_path
             .parent()
             .unwrap_or(Path::new("."))
-            .join(bank.path.as_deref().unwrap_or("src/bank.op"))
+            .join(lib.path.as_deref().unwrap_or("src/lib.op"))
     } else if let Some(rom) = manifest.rom.first() {
         manifest_path
             .parent()
             .unwrap_or(Path::new("."))
             .join(rom.path.as_deref().unwrap_or("src/cart.op"))
     } else {
-        return Err(anyhow::anyhow!("E502: no bank or rom target in Cart.toml"));
+        return Err(anyhow::anyhow!("E502: no lib or rom target in Cart.toml"));
     };
 
     let mut modules: Vec<(String, PathBuf)> = Vec::new();
@@ -44,8 +44,8 @@ pub fn doc(manifest_path: &Path) -> Result<()> {
 
     let mut index = String::new();
     index.push_str(&format!("# {project_name}\n\n"));
-    if let Some(bank) = &manifest.bank {
-        index.push_str(&format!("Bank: {}\n\n", bank.name));
+    if let Some(lib) = &manifest.lib {
+        index.push_str(&format!("Lib: {}\n\n", lib.name));
     }
     for rom in &manifest.rom {
         index.push_str(&format!("ROM: {} (target: {})\n\n", rom.name, rom.target));

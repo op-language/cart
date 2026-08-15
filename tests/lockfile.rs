@@ -92,14 +92,12 @@ fn lockfile_is_stale_when_checksum_differs() {
 fn lockfile_update_from_graph() {
     let mut graph = ResolvedGraph::default();
     graph.packages.push(make_package("std", "0.1.0", "abc"));
-    graph
-        .packages
-        .push(make_package("nes-bank", "1.0.0", "def"));
+    graph.packages.push(make_package("nes", "1.0.0", "def"));
 
     let mut lock = CartLock::new();
     lock.update_from_graph(&graph);
 
     assert_eq!(lock.package.len(), 2);
     assert_eq!(lock.package[0].name, "std");
-    assert_eq!(lock.package[1].name, "nes-bank");
+    assert_eq!(lock.package[1].name, "nes");
 }

@@ -15,7 +15,7 @@ pub mod codes {
     pub const MANIFEST_PARSE: u32 = 502;
     pub const TRIPLET_MALFORMED: u32 = 503;
     pub const DEP_RESOLUTION: u32 = 504;
-    pub const BANK_NOT_INSTALLED: u32 = 505;
+    pub const LIB_NOT_INSTALLED: u32 = 505;
     pub const LOCKFILE_OUT_OF_DATE: u32 = 506;
     pub const BUILD_FAILURE: u32 = 507;
     pub const TEST_FAILURE: u32 = 508;

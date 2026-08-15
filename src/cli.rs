@@ -42,9 +42,9 @@ pub enum Command {
     /// Create a new Op project.
     Init {
         name: String,
-        /// Create a library (bank) project with src/bank.op.
+        /// Create a library (lib) project with src/lib.op.
         #[arg(long)]
-        bank: bool,
+        lib: bool,
         /// Set the default target triplet in Cart.toml.
         #[arg(long)]
         target: Option<String>,
@@ -89,13 +89,13 @@ pub enum Command {
     },
     /// Remove the build output directory.
     Clean,
-    /// Add a bank to the Cart.toml dependencies.
+    /// Add a lib to the Cart.toml dependencies.
     Add {
-        bank: String,
-        /// Git URL for the bank.
+        name: String,
+        /// Git URL for the lib.
         #[arg(long)]
         git: Option<String>,
-        /// Local path for the bank.
+        /// Local path for the lib.
         #[arg(long)]
         path: Option<String>,
         /// Version requirement string.
@@ -104,10 +104,10 @@ pub enum Command {
     },
     /// Generate documentation from doc comments.
     Doc,
-    /// Install a bank in ~/.carts/.
+    /// Install a lib in ~/.carts/.
     Install {
-        bank: String,
-        /// Git URL for the bank.
+        name: String,
+        /// Git URL for the lib.
         #[arg(long)]
         git: Option<String>,
     },
@@ -123,7 +123,7 @@ pub fn run() -> Result<()> {
         .unwrap_or_else(|| std::path::PathBuf::from("Cart.toml"));
 
     match args.command {
-        Command::Init { name, bank, target } => cmd::init::init(&name, bank, target),
+        Command::Init { name, lib, target } => cmd::init::init(&name, lib, target),
         Command::Build {
             target,
             release,
@@ -148,13 +148,13 @@ pub fn run() -> Result<()> {
         Command::Check { target } => cmd::check::check(&manifest_path, target),
         Command::Clean => cmd::clean::clean(&manifest_path),
         Command::Add {
-            bank,
+            name,
             git,
             path,
             version,
-        } => cmd::add::add(&manifest_path, &bank, git, path, version),
+        } => cmd::add::add(&manifest_path, &name, git, path, version),
         Command::Doc => cmd::doc::doc(&manifest_path),
-        Command::Install { bank, git } => cmd::install::install(&bank, git),
+        Command::Install { name, git } => cmd::install::install(&name, git),
         Command::Update => cmd::update::update(&manifest_path),
     }
 }

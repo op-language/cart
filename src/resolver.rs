@@ -1,6 +1,6 @@
 //! Dependency resolver.
 //!
-//! The resolver walks the dependency graph. It reads each bank `Cart.toml`,
+//! The resolver walks the dependency graph. It reads each lib `Cart.toml`,
 //! matches version requirements, detects cycles, and builds a resolved
 //! graph with checksums.
 
@@ -27,7 +27,7 @@ pub struct ResolvedGraph {
 }
 
 /// Resolve all dependencies from a manifest. Walks the dependency graph,
-/// reads each bank `Cart.toml`, matches semver requirements, detects
+/// reads each lib `Cart.toml`, matches semver requirements, detects
 /// cycles, and computes checksums.
 pub fn resolve(
     manifest: &CartManifest,
@@ -70,7 +70,7 @@ fn resolve_one(
 ) -> anyhow::Result<()> {
     if visited.contains(name) {
         return Err(anyhow::anyhow!(
-            "E504: dependency cycle detected at bank '{}'",
+            "E504: dependency cycle detected at lib '{}'",
             name
         ));
     }
@@ -82,34 +82,34 @@ fn resolve_one(
     visited.insert(name.to_string());
 
     let source = resolve_source_path(name, dep, carts_dir, default_git_base)?;
-    let bank_manifest_path = source.join("Cart.toml");
+    let lib_manifest_path = source.join("Cart.toml");
 
-    if !bank_manifest_path.exists() {
+    if !lib_manifest_path.exists() {
         return Err(anyhow::anyhow!(
-            "E505: bank '{}' not installed in {}",
+            "E505: lib '{}' not installed in {}",
             name,
             carts_dir.display()
         ));
     }
 
-    let bank_manifest = CartManifest::load(&bank_manifest_path)?;
-    let bank_version = &bank_manifest.package.version;
+    let lib_manifest = CartManifest::load(&lib_manifest_path)?;
+    let lib_version = &lib_manifest.package.version;
 
     if let Some(req_str) = dep.version_req() {
         let req = VersionReq::parse(req_str)
             .map_err(|e| anyhow::anyhow!("E504: invalid version requirement '{}': {e}", req_str))?;
-        let version = Version::parse(bank_version).map_err(|e| {
+        let version = Version::parse(lib_version).map_err(|e| {
             anyhow::anyhow!(
-                "E504: bank '{}' has invalid version '{}': {e}",
+                "E504: lib '{}' has invalid version '{}': {e}",
                 name,
-                bank_version
+                lib_version
             )
         })?;
         if !req.matches(&version) {
             return Err(anyhow::anyhow!(
-                "E504: bank '{}' version '{}' does not satisfy requirement '{}'",
+                "E504: lib '{}' version '{}' does not satisfy requirement '{}'",
                 name,
-                bank_version,
+                lib_version,
                 req_str
             ));
         }
@@ -129,14 +129,14 @@ fn resolve_one(
 
     graph.packages.push(ResolvedPackage {
         name: name.to_string(),
-        version: bank_version.clone(),
+        version: lib_version.clone(),
         source: locked_source,
         checksum,
     });
 
     seen_names.insert(name.to_string());
 
-    for (sub_name, sub_dep) in &bank_manifest.dependencies {
+    for (sub_name, sub_dep) in &lib_manifest.dependencies {
         resolve_one(
             sub_name,
             sub_dep,
@@ -167,21 +167,21 @@ fn resolve_source_path(
     }
     if let Some(base) = default_git_base {
         return Err(anyhow::anyhow!(
-            "E505: bank '{}' not found in {}. Run: cart install {} (from {base}/{name})",
+            "E505: lib '{}' not found in {}. Run: cart install {} (from {base}/{name})",
             name,
             carts_dir.display(),
             name
         ));
     }
     Err(anyhow::anyhow!(
-        "E505: bank '{}' not found in {}. Run: cart install {}",
+        "E505: lib '{}' not found in {}. Run: cart install {}",
         name,
         carts_dir.display(),
         name
     ))
 }
 
-/// Compute the SHA-256 checksum of a bank source tree. Hashes the file
+/// Compute the SHA-256 checksum of a lib source tree. Hashes the file
 /// contents of all files in the directory recursively.
 fn compute_checksum(dir: &Path) -> anyhow::Result<String> {
     let mut hasher = Sha256::new();

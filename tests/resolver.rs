@@ -3,7 +3,7 @@ use cart::resolver;
 use std::fs;
 use std::path::PathBuf;
 
-fn make_bank_manifest(name: &str, version: &str) -> String {
+fn make_lib_manifest(name: &str, version: &str) -> String {
     format!(
         r#"
 [package]
@@ -11,19 +11,19 @@ name = "{name}"
 version = "{version}"
 edition = "1"
 
-[bank]
+[lib]
 name = "{name}"
-path = "src/bank.op"
+path = "src/lib.op"
 "#
     )
 }
 
-fn make_bank_dir(carts_dir: &std::path::Path, name: &str, version: &str) -> PathBuf {
+fn make_lib_dir(carts_dir: &std::path::Path, name: &str, version: &str) -> PathBuf {
     let dir = carts_dir.join(name);
     let src = dir.join("src");
-    fs::create_dir_all(&src).expect("create bank dir");
-    fs::write(dir.join("Cart.toml"), make_bank_manifest(name, version)).expect("write manifest");
-    fs::write(src.join("bank.op"), "//! bank\n").expect("write source");
+    fs::create_dir_all(&src).expect("create lib dir");
+    fs::write(dir.join("Cart.toml"), make_lib_manifest(name, version)).expect("write manifest");
+    fs::write(src.join("lib.op"), "//! lib\n").expect("write source");
     dir
 }
 
@@ -33,7 +33,7 @@ fn resolve_single_path_dependency() {
     let carts_dir = tmp.path().join("carts");
     fs::create_dir_all(&carts_dir).expect("create carts dir");
 
-    make_bank_dir(&carts_dir, "std", "0.1.0");
+    make_lib_dir(&carts_dir, "std", "0.1.0");
 
     let manifest_text = r#"
 [package]
@@ -52,7 +52,7 @@ std = "0.1"
 }
 
 #[test]
-fn resolve_missing_bank_errors() {
+fn resolve_missing_lib_errors() {
     let tmp = tempfile::tempdir().expect("tempdir");
     let carts_dir = tmp.path().join("carts");
     fs::create_dir_all(&carts_dir).expect("create carts dir");
@@ -79,7 +79,7 @@ fn resolve_version_mismatch_errors() {
     let carts_dir = tmp.path().join("carts");
     fs::create_dir_all(&carts_dir).expect("create carts dir");
 
-    make_bank_dir(&carts_dir, "std", "0.1.0");
+    make_lib_dir(&carts_dir, "std", "0.1.0");
 
     let manifest_text = r#"
 [package]
@@ -103,15 +103,15 @@ fn resolve_path_dependency() {
     let carts_dir = tmp.path().join("carts");
     fs::create_dir_all(&carts_dir).expect("create carts dir");
 
-    let bank_dir = tmp.path().join("local-bank");
-    let src = bank_dir.join("src");
-    fs::create_dir_all(&src).expect("create bank dir");
+    let lib_dir = tmp.path().join("local-lib");
+    let src = lib_dir.join("src");
+    fs::create_dir_all(&src).expect("create lib dir");
     fs::write(
-        bank_dir.join("Cart.toml"),
-        make_bank_manifest("local", "0.1.0"),
+        lib_dir.join("Cart.toml"),
+        make_lib_manifest("local", "0.1.0"),
     )
     .expect("write");
-    fs::write(src.join("bank.op"), "//! bank\n").expect("write");
+    fs::write(src.join("lib.op"), "//! lib\n").expect("write");
 
     let manifest_text = format!(
         r#"
@@ -122,7 +122,7 @@ version = "0.1.0"
 [dependencies]
 local = {{ path = "{}" }}
 "#,
-        bank_dir.display()
+        lib_dir.display()
     );
     let manifest = CartManifest::from_toml(&manifest_text).expect("parse");
 
@@ -137,8 +137,8 @@ fn resolve_detects_cycle() {
     let carts_dir = tmp.path().join("carts");
     fs::create_dir_all(&carts_dir).expect("create carts dir");
 
-    let a_dir = make_bank_dir(&carts_dir, "a", "0.1.0");
-    let b_dir = make_bank_dir(&carts_dir, "b", "0.1.0");
+    let a_dir = make_lib_dir(&carts_dir, "a", "0.1.0");
+    let b_dir = make_lib_dir(&carts_dir, "b", "0.1.0");
 
     fs::write(
         a_dir.join("Cart.toml"),
@@ -149,9 +149,9 @@ name = "a"
 version = "0.1.0"
 edition = "1"
 
-[bank]
+[lib]
 name = "a"
-path = "src/bank.op"
+path = "src/lib.op"
 
 [dependencies]
 b = "0.1"
@@ -168,9 +168,9 @@ name = "b"
 version = "0.1.0"
 edition = "1"
 
-[bank]
+[lib]
 name = "b"
-path = "src/bank.op"
+path = "src/lib.op"
 
 [dependencies]
 a = "0.1"
@@ -201,7 +201,7 @@ fn resolve_any_version() {
     let carts_dir = tmp.path().join("carts");
     fs::create_dir_all(&carts_dir).expect("create carts dir");
 
-    make_bank_dir(&carts_dir, "std", "0.1.0");
+    make_lib_dir(&carts_dir, "std", "0.1.0");
 
     let manifest_text = r#"
 [package]

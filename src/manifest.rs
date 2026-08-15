@@ -11,7 +11,7 @@ use std::collections::BTreeMap;
 pub struct CartManifest {
     pub package: Package,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub bank: Option<Bank>,
+    pub lib: Option<Lib>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub rom: Vec<Rom>,
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
@@ -43,9 +43,9 @@ pub struct Package {
     pub license: Option<String>,
 }
 
-/// The `[bank]` section.
+/// The `[lib]` section.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
-pub struct Bank {
+pub struct Lib {
     pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub path: Option<String>,

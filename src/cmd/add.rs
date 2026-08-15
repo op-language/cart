@@ -1,4 +1,4 @@
-//! `cart add` — add a bank to the Cart.toml dependencies.
+//! `cart add` — add a lib to the Cart.toml dependencies.
 
 use crate::config::GlobalConfig;
 use crate::manifest::{CartManifest, Dependency, DetailedDependency};
@@ -8,7 +8,7 @@ use std::path::Path;
 
 pub fn add(
     manifest_path: &Path,
-    bank: &str,
+    name: &str,
     git: Option<String>,
     path: Option<String>,
     version: Option<String>,
@@ -45,10 +45,10 @@ pub fn add(
         Dependency::Simple("*".to_string())
     };
 
-    manifest.dependencies.insert(bank.to_string(), dep.clone());
+    manifest.dependencies.insert(name.to_string(), dep.clone());
 
     manifest.save(manifest_path)?;
-    eprintln!("Added '{}' to Cart.toml dependencies.", bank);
+    eprintln!("Added '{name}' to Cart.toml dependencies.");
 
     if let Some(git_url) = git {
         let carts_dir = GlobalConfig::carts_dir();
@@ -58,13 +58,9 @@ pub fn add(
             tag: None,
             rev: None,
         };
-        eprintln!("Installing bank '{}' into {}...", bank, carts_dir.display());
-        registry::install(bank, &source, &carts_dir)?;
-        eprintln!(
-            "Installed '{}' in {}.",
-            bank,
-            carts_dir.join(bank).display()
-        );
+        eprintln!("Installing lib '{name}' into {}...", carts_dir.display());
+        registry::install(name, &source, &carts_dir)?;
+        eprintln!("Installed '{name}' in {}.", carts_dir.join(name).display());
     }
 
     Ok(())

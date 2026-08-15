@@ -1,10 +1,10 @@
-//! `cart install` — install a bank in ~/.carts/.
+//! `cart install` — install a lib in ~/.carts/.
 
 use crate::config::GlobalConfig;
 use crate::registry::{self, GitSource};
 use anyhow::Result;
 
-pub fn install(bank: &str, git: Option<String>) -> Result<()> {
+pub fn install(name: &str, git: Option<String>) -> Result<()> {
     let carts_dir = GlobalConfig::carts_dir();
     let config = GlobalConfig::load();
 
@@ -22,18 +22,17 @@ pub fn install(bank: &str, git: Option<String>) -> Result<()> {
             anyhow::anyhow!("E510: no --git URL and no default-git-base in ~/.cart/config.toml")
         })?;
         GitSource {
-            url: format!("{base}/{bank}"),
+            url: format!("{base}/{name}"),
             branch: None,
             tag: None,
             rev: None,
         }
     };
 
-    eprintln!("Installing bank '{}' into {}...", bank, carts_dir.display());
-    let result = registry::install(bank, &source, &carts_dir)?;
+    eprintln!("Installing lib '{name}' into {}...", carts_dir.display());
+    let result = registry::install(name, &source, &carts_dir)?;
     eprintln!(
-        "Installed '{}' at {} (sha: {})",
-        bank,
+        "Installed '{name}' at {} (sha: {})",
         result.path.display(),
         &result.sha[..8.min(result.sha.len())]
     );

@@ -34,10 +34,10 @@ fn init_rom_project() {
 }
 
 #[test]
-fn init_bank_project() {
+fn init_lib_project() {
     let _lock = INIT_LOCK.lock().unwrap();
     let tmp = tempdir().expect("tempdir");
-    let project_name = "mybank";
+    let project_name = "mylib";
     let project_path = tmp.path().join(project_name);
 
     let old_dir = std::env::current_dir().expect("cwd");
@@ -51,11 +51,11 @@ fn init_bank_project() {
     result.expect("init");
 
     assert!(project_path.join("Cart.toml").exists());
-    assert!(project_path.join("src").join("bank.op").exists());
+    assert!(project_path.join("src").join("lib.op").exists());
 
     let manifest_text = fs::read_to_string(project_path.join("Cart.toml")).expect("read");
-    assert!(manifest_text.contains("mybank"));
-    assert!(manifest_text.contains("[bank]"));
+    assert!(manifest_text.contains("mylib"));
+    assert!(manifest_text.contains("[lib]"));
     assert!(!manifest_text.contains("[[rom]]"));
 }
 
