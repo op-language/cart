@@ -45,11 +45,6 @@ pub fn build(
     lock.update_from_graph(&graph);
     lock.save(&lock_path)?;
 
-    if manifest.rom.is_empty() {
-        eprintln!("No ROM targets in Cart.toml. Nothing to build.");
-        return Ok(());
-    }
-
     let opt_level = if debug {
         0
     } else if release {
@@ -57,6 +52,69 @@ pub fn build(
     } else {
         config.default_opt_level()
     };
+
+    if manifest.rom.is_empty() {
+        if let Some(lib) = &manifest.lib {
+            let lib_target = target
+                .clone()
+                .or_else(|| {
+                    manifest
+                        .target
+                        .as_ref()
+                        .map(|t| t.default.clone())
+                        .filter(|d| !d.is_empty())
+                })
+                .or_else(|| config.default_target().map(|s| s.to_string()))
+                .ok_or_else(|| {
+                    anyhow::anyhow!("E503: no target triplet for lib build")
+                })?;
+
+            let input = manifest_path
+                .parent()
+                .unwrap_or(Path::new("."))
+                .join(lib.path.as_deref().unwrap_or("src/lib.op"));
+
+            let output_dir = manifest_path
+                .parent()
+                .unwrap_or(Path::new("."))
+                .join("target")
+                .join(&lib_target);
+            std::fs::create_dir_all(&output_dir)?;
+
+            let output = output_dir.join(format!("{}.opb", lib.name));
+
+            let all_features = [
+                manifest
+                    .features
+                    .as_ref()
+                    .map(|f| f.flags.keys().cloned().collect::<Vec<_>>())
+                    .unwrap_or_default(),
+                features.clone(),
+            ]
+            .concat();
+
+            eprintln!("Building lib {} for {}...", lib.name, lib_target);
+
+            let args = OpcArgs {
+                input,
+                target: lib_target.clone(),
+                features: all_features,
+                opt_level,
+                format: Some("raw".to_string()),
+                output: Some(output.clone()),
+                stage: OpcStage::Full,
+            };
+
+            opc::invoke(&args)?;
+
+            eprintln!("Lib written to {}", output.display());
+            return Ok(());
+        }
+
+        return Err(anyhow::anyhow!(
+            "E502: no lib or rom target in Cart.toml"
+        ));
+    }
 
     for rom in &manifest.rom {
         let rom_target = target.clone().unwrap_or_else(|| rom.target.clone());
