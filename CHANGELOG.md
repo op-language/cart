@@ -5,6 +5,26 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0]
+
+### Added
+- `cart build` now clones a missing git dependency into `~/.carts/`
+  during resolution instead of erroring with E505.
+- `cart build` now compiles lib projects with `opc` and writes the
+  output to `target/<triplet>/<libname>.opb`.
+- `cart init` now emits the `[features]` table in the generated
+  `Cart.toml`.
+- `cart init` now validates the project name. Names must contain only
+  lowercase letters, digits, hyphens, and underscores.
+
+### Changed
+- A dependency must now specify either `git` or `path`. A version-only
+  dependency (e.g. `std = "1.0"`) is rejected with E504.
+- `cart add` now requires `--git` or `--path`. The version-only
+  fallback is removed.
+- `cart init` lib template doc comment changed from "Lib entry point."
+  to "Bank entry point." to match the design document.
+
 ## [0.2.0]
 
 ### Changed

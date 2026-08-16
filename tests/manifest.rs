@@ -1,4 +1,4 @@
-use cart::manifest::{CartManifest, Dependency, DetailedDependency};
+use cart::manifest::{CartManifest, Dependency};
 
 #[test]
 fn parse_simple_manifest() {

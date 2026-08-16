@@ -88,8 +88,7 @@ fn init_rom_manifest_matches_template() {
     cmd::init::init(project_name, false, Some(triplet.to_string())).expect("init");
     let _ = std::env::set_current_dir(&old_dir);
 
-    let manifest_text =
-        fs::read_to_string(project_path.join("Cart.toml")).expect("read Cart.toml");
+    let manifest_text = fs::read_to_string(project_path.join("Cart.toml")).expect("read Cart.toml");
 
     assert!(manifest_text.contains("[features]"));
     assert!(manifest_text.contains("[[rom]]"));
@@ -123,8 +122,7 @@ fn init_lib_manifest_matches_template() {
     cmd::init::init(project_name, true, Some(triplet.to_string())).expect("init");
     let _ = std::env::set_current_dir(&old_dir);
 
-    let manifest_text =
-        fs::read_to_string(project_path.join("Cart.toml")).expect("read Cart.toml");
+    let manifest_text = fs::read_to_string(project_path.join("Cart.toml")).expect("read Cart.toml");
 
     assert!(manifest_text.contains("[features]"));
     assert!(manifest_text.contains("[lib]"));
@@ -149,7 +147,10 @@ fn init_rejects_invalid_name() {
         let result = cmd::init::init(bad_name, false, None);
         assert!(result.is_err(), "expected error for name: {bad_name:?}");
         let err = result.unwrap_err().to_string();
-        assert!(err.contains("E502"), "expected E502 for name: {bad_name:?}, got: {err}");
+        assert!(
+            err.contains("E502"),
+            "expected E502 for name: {bad_name:?}, got: {err}"
+        );
     }
 
     let _ = std::env::set_current_dir(&old_dir);
@@ -164,8 +165,12 @@ fn init_creates_git_repo() {
 
     let old_dir = std::env::current_dir().expect("cwd");
     std::env::set_current_dir(tmp.path()).expect("cd");
-    cmd::init::init(project_name, false, Some("mos6502-nintendo-nes-ntsc".to_string()))
-        .expect("init");
+    cmd::init::init(
+        project_name,
+        false,
+        Some("mos6502-nintendo-nes-ntsc".to_string()),
+    )
+    .expect("init");
     let _ = std::env::set_current_dir(&old_dir);
 
     assert!(project_path.join(".git").exists());

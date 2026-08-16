@@ -108,7 +108,9 @@ fn validate_name(name: &str) -> Result<()> {
         return Err(anyhow::anyhow!("E502: project name must not be empty"));
     }
     if name == "." || name == ".." {
-        return Err(anyhow::anyhow!("E502: project name must not be '.' or '..'"));
+        return Err(anyhow::anyhow!(
+            "E502: project name must not be '.' or '..'"
+        ));
     }
     let valid = name
         .chars()

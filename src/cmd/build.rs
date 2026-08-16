@@ -65,9 +65,7 @@ pub fn build(
                         .filter(|d| !d.is_empty())
                 })
                 .or_else(|| config.default_target().map(|s| s.to_string()))
-                .ok_or_else(|| {
-                    anyhow::anyhow!("E503: no target triplet for lib build")
-                })?;
+                .ok_or_else(|| anyhow::anyhow!("E503: no target triplet for lib build"))?;
 
             let input = manifest_path
                 .parent()
@@ -111,9 +109,7 @@ pub fn build(
             return Ok(());
         }
 
-        return Err(anyhow::anyhow!(
-            "E502: no lib or rom target in Cart.toml"
-        ));
+        return Err(anyhow::anyhow!("E502: no lib or rom target in Cart.toml"));
     }
 
     for rom in &manifest.rom {

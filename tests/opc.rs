@@ -1,5 +1,4 @@
 use cart::opc;
-use std::process::Command;
 
 #[test]
 fn output_extension_mapping() {
