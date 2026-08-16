@@ -29,7 +29,7 @@ pub fn add(
         })
     } else if let Some(p) = path {
         Dependency::Detailed(DetailedDependency {
-            version: None,
+            version: version.clone(),
             git: None,
             branch: None,
             tag: None,
@@ -39,10 +39,11 @@ pub fn add(
             optional: false,
             default_features: true,
         })
-    } else if let Some(v) = version {
-        Dependency::Simple(v)
     } else {
-        Dependency::Simple("*".to_string())
+        return Err(anyhow::anyhow!(
+            "E504: cart add requires --git or --path for dependency '{}'",
+            name
+        ));
     };
 
     manifest.dependencies.insert(name.to_string(), dep.clone());

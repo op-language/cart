@@ -1,4 +1,4 @@
-use cart::manifest::{CartManifest, Dependency};
+use cart::manifest::CartManifest;
 use cart::resolver;
 use std::fs;
 use std::path::PathBuf;
@@ -33,17 +33,20 @@ fn resolve_single_path_dependency() {
     let carts_dir = tmp.path().join("carts");
     fs::create_dir_all(&carts_dir).expect("create carts dir");
 
-    make_lib_dir(&carts_dir, "std", "0.1.0");
+    let lib_dir = make_lib_dir(&carts_dir, "std", "0.1.0");
 
-    let manifest_text = r#"
+    let manifest_text = format!(
+        r#"
 [package]
 name = "test"
 version = "0.1.0"
 
 [dependencies]
-std = "0.1"
-"#;
-    let manifest = CartManifest::from_toml(manifest_text).expect("parse");
+std = {{ version = "0.1", path = "{}" }}
+"#,
+        lib_dir.display()
+    );
+    let manifest = CartManifest::from_toml(&manifest_text).expect("parse");
 
     let graph = resolver::resolve(&manifest, &carts_dir, None).expect("resolve");
     assert_eq!(graph.packages.len(), 1);
@@ -63,7 +66,7 @@ name = "test"
 version = "0.1.0"
 
 [dependencies]
-nonexistent = "1.0"
+nonexistent = { version = "1.0", git = "https://example.com/nonexistent" }
 "#;
     let manifest = CartManifest::from_toml(manifest_text).expect("parse");
 
@@ -79,17 +82,20 @@ fn resolve_version_mismatch_errors() {
     let carts_dir = tmp.path().join("carts");
     fs::create_dir_all(&carts_dir).expect("create carts dir");
 
-    make_lib_dir(&carts_dir, "std", "0.1.0");
+    let lib_dir = make_lib_dir(&carts_dir, "std", "0.1.0");
 
-    let manifest_text = r#"
+    let manifest_text = format!(
+        r#"
 [package]
 name = "test"
 version = "0.1.0"
 
 [dependencies]
-std = "2.0"
-"#;
-    let manifest = CartManifest::from_toml(manifest_text).expect("parse");
+std = {{ version = "2.0", path = "{}" }}
+"#,
+        lib_dir.display()
+    );
+    let manifest = CartManifest::from_toml(&manifest_text).expect("parse");
 
     let result = resolver::resolve(&manifest, &carts_dir, None);
     assert!(result.is_err());
@@ -154,8 +160,9 @@ name = "a"
 path = "src/lib.op"
 
 [dependencies]
-b = "0.1"
-"#
+b = {{ version = "0.1", path = "{}" }}
+"#,
+            b_dir.display()
         ),
     )
     .expect("write a");
@@ -173,21 +180,25 @@ name = "b"
 path = "src/lib.op"
 
 [dependencies]
-a = "0.1"
-"#
+a = {{ version = "0.1", path = "{}" }}
+"#,
+            a_dir.display()
         ),
     )
     .expect("write b");
 
-    let manifest_text = r#"
+    let manifest_text = format!(
+        r#"
 [package]
 name = "test"
 version = "0.1.0"
 
 [dependencies]
-a = "0.1"
-"#;
-    let manifest = CartManifest::from_toml(manifest_text).expect("parse");
+a = {{ version = "0.1", path = "{}" }}
+"#,
+        a_dir.display()
+    );
+    let manifest = CartManifest::from_toml(&manifest_text).expect("parse");
 
     let result = resolver::resolve(&manifest, &carts_dir, None);
     assert!(result.is_err());
@@ -201,6 +212,31 @@ fn resolve_any_version() {
     let carts_dir = tmp.path().join("carts");
     fs::create_dir_all(&carts_dir).expect("create carts dir");
 
+    let lib_dir = make_lib_dir(&carts_dir, "std", "0.1.0");
+
+    let manifest_text = format!(
+        r#"
+[package]
+name = "test"
+version = "0.1.0"
+
+[dependencies]
+std = {{ version = "*", path = "{}" }}
+"#,
+        lib_dir.display()
+    );
+    let manifest = CartManifest::from_toml(&manifest_text).expect("parse");
+
+    let graph = resolver::resolve(&manifest, &carts_dir, None).expect("resolve");
+    assert_eq!(graph.packages.len(), 1);
+}
+
+#[test]
+fn resolve_rejects_version_only_dep() {
+    let tmp = tempfile::tempdir().expect("tempdir");
+    let carts_dir = tmp.path().join("carts");
+    fs::create_dir_all(&carts_dir).expect("create carts dir");
+
     make_lib_dir(&carts_dir, "std", "0.1.0");
 
     let manifest_text = r#"
@@ -209,10 +245,13 @@ name = "test"
 version = "0.1.0"
 
 [dependencies]
-std = "*"
+std = "1.0"
 "#;
     let manifest = CartManifest::from_toml(manifest_text).expect("parse");
 
-    let graph = resolver::resolve(&manifest, &carts_dir, None).expect("resolve");
-    assert_eq!(graph.packages.len(), 1);
+    let result = resolver::resolve(&manifest, &carts_dir, None);
+    assert!(result.is_err());
+    let err = result.unwrap_err().to_string();
+    assert!(err.contains("E504"));
+    assert!(err.contains("git") || err.contains("path"));
 }

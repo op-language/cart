@@ -45,6 +45,10 @@ pub fn resolve(
         .collect();
 
     for (name, dep) in &deps {
+        validate_dependency(name, dep)?;
+    }
+
+    for (name, dep) in &deps {
         resolve_one(
             name,
             dep,
@@ -57,6 +61,18 @@ pub fn resolve(
     }
 
     Ok(graph)
+}
+
+fn validate_dependency(name: &str, dep: &Dependency) -> anyhow::Result<()> {
+    let has_path = dep.path().is_some();
+    let has_git = dep.git().is_some();
+    if !has_path && !has_git {
+        return Err(anyhow::anyhow!(
+            "E504: dependency '{}' must specify either 'git' or 'path'",
+            name
+        ));
+    }
+    Ok(())
 }
 
 fn resolve_one(

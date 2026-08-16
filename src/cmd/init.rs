@@ -1,6 +1,6 @@
 //! `cart init` — create a new Op project.
 
-use crate::manifest::{CartManifest, Lib, Package, Rom, TargetSection};
+use crate::manifest::{CartManifest, Features, Lib, Package, Rom, TargetSection};
 use anyhow::Result;
 use std::fs;
 use std::path::Path;
@@ -10,9 +10,11 @@ const GITIGNORE: &str = "/target\n";
 const ROM_ENTRY: &str =
     "//! {name}\n//!\n//! Project entry point.\n\nnoreturn fn main() {\n    loop {\n    }\n}\n";
 
-const LIB_ENTRY: &str = "//! {name} lib\n//!\n//! Lib entry point.\n";
+const LIB_ENTRY: &str = "//! {name} lib\n//!\n//! Bank entry point.\n";
 
 pub fn init(name: &str, lib: bool, target: Option<String>) -> Result<()> {
+    validate_name(name)?;
+
     let project_dir = std::path::PathBuf::from(name);
     if project_dir.exists() {
         return Err(anyhow::anyhow!("E502: directory '{}' already exists", name));
@@ -46,7 +48,7 @@ pub fn init(name: &str, lib: bool, target: Option<String>) -> Result<()> {
             target: Some(TargetSection {
                 default: default_target.clone(),
             }),
-            features: None,
+            features: Some(Features::default()),
             run: None,
             test: None,
             doc: None,
@@ -74,7 +76,7 @@ pub fn init(name: &str, lib: bool, target: Option<String>) -> Result<()> {
             target: Some(TargetSection {
                 default: default_target,
             }),
-            features: None,
+            features: Some(Features::default()),
             run: None,
             test: None,
             doc: None,
@@ -97,6 +99,25 @@ fn init_git(dir: &Path) -> Result<()> {
         .status();
     if let Err(e) = result {
         eprintln!("warning: git init failed: {e}");
+    }
+    Ok(())
+}
+
+fn validate_name(name: &str) -> Result<()> {
+    if name.is_empty() {
+        return Err(anyhow::anyhow!("E502: project name must not be empty"));
+    }
+    if name == "." || name == ".." {
+        return Err(anyhow::anyhow!("E502: project name must not be '.' or '..'"));
+    }
+    let valid = name
+        .chars()
+        .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_' || c == '-');
+    if !valid {
+        return Err(anyhow::anyhow!(
+            "E502: project name '{}' must contain only lowercase letters, digits, hyphens, and underscores",
+            name
+        ));
     }
     Ok(())
 }
