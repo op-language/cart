@@ -5,6 +5,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+No changes. `cart` 0.3.0 is the unchanged companion to the `op` 0.2.0 and
+`std` 0.2.0 release cohort. `cart` has no Cargo dependency on any `op-*`
+crate or `std`, and the `mod`/`use` and `.opb` changes in this cohort do
+not affect `cart` behavior.
+
 ## [0.3.0]
 
 ### Added
