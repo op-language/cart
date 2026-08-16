@@ -13,6 +13,8 @@ pub fn update(manifest_path: &Path) -> Result<()> {
     let config = GlobalConfig::load();
     let carts_dir = GlobalConfig::carts_dir();
 
+    std::fs::create_dir_all(&carts_dir)?;
+
     for (name, dep) in &manifest.dependencies {
         if dep.path().is_some() {
             eprintln!("Skipping path dependency: {name}");

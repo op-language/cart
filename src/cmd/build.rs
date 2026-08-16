@@ -21,6 +21,8 @@ pub fn build(
     let config = GlobalConfig::load();
     let carts_dir = GlobalConfig::carts_dir();
 
+    std::fs::create_dir_all(&carts_dir)?;
+
     let graph = resolver::resolve(&manifest, &carts_dir, config.default_git_base())?;
 
     let lock_path = manifest_path

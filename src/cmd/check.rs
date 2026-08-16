@@ -11,6 +11,8 @@ pub fn check(manifest_path: &Path, target: Option<String>) -> Result<()> {
     let config = GlobalConfig::load();
     let carts_dir = GlobalConfig::carts_dir();
 
+    std::fs::create_dir_all(&carts_dir)?;
+
     let _graph = crate::resolver::resolve(&manifest, &carts_dir, config.default_git_base())?;
 
     let targets: Vec<String> = if manifest.rom.is_empty() {

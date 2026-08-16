@@ -6,6 +6,7 @@
 
 use crate::lockfile::LockedSource;
 use crate::manifest::{CartManifest, Dependency};
+use crate::registry;
 use semver::{Version, VersionReq};
 use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet, HashSet};
@@ -181,20 +182,22 @@ fn resolve_source_path(
     if dest.exists() {
         return Ok(dest);
     }
-    if let Some(base) = default_git_base {
-        return Err(anyhow::anyhow!(
-            "E505: lib '{}' not found in {}. Run: cart install {} (from {base}/{name})",
+    let source = registry::resolve_source(name, dep, default_git_base)?;
+    registry::install(name, &source, carts_dir).map_err(|e| {
+        anyhow::anyhow!(
+            "E510: failed to clone lib '{}' into {}: {e}",
             name,
-            carts_dir.display(),
-            name
+            carts_dir.display()
+        )
+    })?;
+    if !dest.exists() {
+        return Err(anyhow::anyhow!(
+            "E505: lib '{}' clone did not create {}",
+            name,
+            dest.display()
         ));
     }
-    Err(anyhow::anyhow!(
-        "E505: lib '{}' not found in {}. Run: cart install {}",
-        name,
-        carts_dir.display(),
-        name
-    ))
+    Ok(dest)
 }
 
 /// Compute the SHA-256 checksum of a lib source tree. Hashes the file
