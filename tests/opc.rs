@@ -14,7 +14,7 @@ fn opc_args_build_command() {
     use std::path::PathBuf;
     let args = opc::OpcArgs {
         input: PathBuf::from("game.op"),
-        target: "mos6502-nintendo-nes-ntsc".to_string(),
+        target: "rp2A03-nintendo-nes-ntsc".to_string(),
         features: vec!["debug".to_string()],
         opt_level: 1,
         format: Some("ines".to_string()),
@@ -31,7 +31,7 @@ fn opc_args_parse_stage() {
     use std::path::PathBuf;
     let args = opc::OpcArgs {
         input: PathBuf::from("game.op"),
-        target: "mos6502-nintendo-nes-ntsc".to_string(),
+        target: "rp2A03-nintendo-nes-ntsc".to_string(),
         features: Vec::new(),
         opt_level: 0,
         format: None,

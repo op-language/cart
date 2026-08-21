@@ -93,7 +93,7 @@ fn build_lib_invokes_opc() {
     fs::create_dir_all(&src).expect("mkdir src");
     fs::write(src.join("lib.op"), "//! mylib lib\n").expect("write lib.op");
 
-    let triplet = "mos6502-nintendo-nes-ntsc";
+    let triplet = "rp2A03-nintendo-nes-ntsc";
     write_manifest(&project, &lib_manifest("mylib", triplet));
 
     make_fake_opc(tmp.path());
@@ -133,7 +133,7 @@ fn build_rom_invokes_opc() {
     fs::create_dir_all(&src).expect("mkdir src");
     fs::write(src.join("cart.op"), "//! mygame\n").expect("write cart.op");
 
-    let triplet = "mos6502-nintendo-nes-ntsc";
+    let triplet = "rp2A03-nintendo-nes-ntsc";
     write_manifest(&project, &rom_manifest("mygame", triplet));
 
     make_fake_opc(tmp.path());
@@ -218,7 +218,7 @@ fn build_lib_with_git_dep() {
     fs::create_dir_all(&src).expect("mkdir src");
     fs::write(src.join("lib.op"), "//! mylib lib\n").expect("write lib.op");
 
-    let triplet = "mos6502-nintendo-nes-ntsc";
+    let triplet = "rp2A03-nintendo-nes-ntsc";
     let manifest_text = format!(
         r#"
 [package]

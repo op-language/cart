@@ -11,7 +11,7 @@ edition = "1"
 [[rom]]
 name = "test"
 path = "src/cart.op"
-target = "mos6502-nintendo-nes-ntsc"
+target = "rp2A03-nintendo-nes-ntsc"
 
 [dependencies]
 std = "1.0"
@@ -19,7 +19,7 @@ std = "1.0"
     let manifest = CartManifest::from_toml(text).expect("parse");
     assert_eq!(manifest.package.name, "test");
     assert_eq!(manifest.rom.len(), 1);
-    assert_eq!(manifest.rom[0].target, "mos6502-nintendo-nes-ntsc");
+    assert_eq!(manifest.rom[0].target, "rp2A03-nintendo-nes-ntsc");
     assert!(matches!(
         &manifest.dependencies["std"],
         Dependency::Simple(s) if s == "1.0"
@@ -80,13 +80,13 @@ license = "Apache-2.0"
 [[rom]]
 name = "test"
 path = "src/cart.op"
-target = "mos6502-nintendo-nes-ntsc"
+target = "rp2A03-nintendo-nes-ntsc"
 
 [dependencies]
 std = "1.0"
 
 [target]
-default = "mos6502-nintendo-nes-ntsc"
+default = "rp2A03-nintendo-nes-ntsc"
 
 [features]
 debug = []
@@ -108,7 +108,7 @@ version = "0.1.0"
 
 [[rom]]
 name = "test"
-target = "mos6502-nintendo-nes-ntsc"
+target = "rp2A03-nintendo-nes-ntsc"
 
 [[run.profile]]
 name = "default"
@@ -136,7 +136,7 @@ version = "0.1.0"
 
 [[rom]]
 name = "test"
-target = "mos6502-nintendo-nes-ntsc"
+target = "rp2A03-nintendo-nes-ntsc"
 
 [test]
 profile = "test"
@@ -162,12 +162,12 @@ version = "0.1.0"
 
 [[rom]]
 name = "test"
-target = "mos6502-nintendo-nes-ntsc"
+target = "rp2A03-nintendo-nes-ntsc"
 "#;
     let manifest = CartManifest::from_toml(text).expect("parse");
     assert_eq!(
         manifest.default_target(None),
-        Some("mos6502-nintendo-nes-ntsc".to_string())
+        Some("rp2A03-nintendo-nes-ntsc".to_string())
     );
 }
 
@@ -180,7 +180,7 @@ version = "0.1.0"
 
 [[rom]]
 name = "test"
-target = "mos6502-nintendo-nes-ntsc"
+target = "rp2A03-nintendo-nes-ntsc"
 "#;
     let manifest = CartManifest::from_toml(text).expect("parse");
     assert_eq!(

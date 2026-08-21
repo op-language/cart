@@ -449,7 +449,7 @@ path = "src/lib.op"
 [[rom]]
 name = "nes-demo"
 path = "src/cart.op"
-target = "mos6502-nintendo-nes-ntsc"
+target = "rp2A03-nintendo-nes-ntsc"
 
 [dependencies]
 mos6502 = "1.0"
@@ -460,7 +460,7 @@ std = { path = "../std" }
 test-utils = { version = "0.1", path = "../test-utils" }
 
 [target]
-default = "mos6502-nintendo-nes-ntsc"
+default = "rp2A03-nintendo-nes-ntsc"
 
 [features]
 debug = []
@@ -710,7 +710,7 @@ optional. If it is absent, the `cart` tool uses built-in defaults.
 default-git-base = "https://github.com/op-language"
 
 [build]
-target = "mos6502-nintendo-nes-ntsc"
+target = "rp2A03-nintendo-nes-ntsc"
 opt-level = 1
 
 [[run.profile]]

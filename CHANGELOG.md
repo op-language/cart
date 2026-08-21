@@ -7,10 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-No changes. `cart` 0.3.0 is the unchanged companion to the `op` 0.2.0 and
-`std` 0.2.0 release cohort. `cart` has no Cargo dependency on any `op-*`
-crate or `std`, and the `mod`/`use` and `.opb` changes in this cohort do
-not affect `cart` behavior.
+No changes.
+
+## [0.4.0]
+
+### Added
+- `dialoguer` dependency for the interactive target selection.
+- `SUPPORTED_TARGETS` registry in `src/targets.rs`. It lists every
+  canonical triplet, CPU name, and platform name.
+- `cart init` shows an interactive select list when the user does
+  not supply the `--target` flag. The selected triplet becomes the
+  `default` target in `Cart.toml`. The `--target` flag overrides the
+  prompt.
+
+### Changed
+- All tests use `rp2A03-nintendo-nes-ntsc` as the fixture target.
+- The technical-design doc references
+  `rp2A03-nintendo-nes-ntsc`.
 
 ## [0.3.0]
 

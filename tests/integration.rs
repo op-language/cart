@@ -44,7 +44,7 @@ fn init_then_build_rom() {
     let _lock = INT_LOCK.lock().unwrap();
     let tmp = tempdir().expect("tempdir");
     let project_name = "demogame";
-    let triplet = "mos6502-nintendo-nes-ntsc";
+    let triplet = "rp2A03-nintendo-nes-ntsc";
 
     let old_dir = std::env::current_dir().expect("cwd");
     let old_path = std::env::var("PATH").unwrap_or_default();
@@ -91,7 +91,7 @@ fn init_then_build_lib() {
     let _lock = INT_LOCK.lock().unwrap();
     let tmp = tempdir().expect("tempdir");
     let project_name = "demolib";
-    let triplet = "mos6502-nintendo-nes-ntsc";
+    let triplet = "rp2A03-nintendo-nes-ntsc";
 
     let old_dir = std::env::current_dir().expect("cwd");
     let old_path = std::env::var("PATH").unwrap_or_default();
@@ -142,7 +142,7 @@ fn init_then_build_with_git_dep() {
     let _lock = INT_LOCK.lock().unwrap();
     let tmp = tempdir().expect("tempdir");
     let project_name = "depdemo";
-    let triplet = "mos6502-nintendo-nes-ntsc";
+    let triplet = "rp2A03-nintendo-nes-ntsc";
 
     let bare = make_bare_git_lib(tmp.path(), "std", "0.1.0");
     let bare_url = format!("file://{}", bare.display());

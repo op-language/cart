@@ -1,6 +1,7 @@
 //! `cart init` — create a new Op project.
 
 use crate::manifest::{CartManifest, Features, Lib, Package, Rom, TargetSection};
+use crate::targets::SUPPORTED_TARGETS;
 use anyhow::Result;
 use std::fs;
 use std::path::Path;
@@ -20,7 +21,22 @@ pub fn init(name: &str, lib: bool, target: Option<String>) -> Result<()> {
         return Err(anyhow::anyhow!("E502: directory '{}' already exists", name));
     }
 
-    let default_target = target.unwrap_or_else(|| "mos6502-nintendo-nes-ntsc".to_string());
+    let default_target = match target {
+        Some(t) => t,
+        None => {
+            use dialoguer::Select;
+            let items: Vec<String> = SUPPORTED_TARGETS
+                .iter()
+                .map(|(trip, cpu, plat)| format!("{trip}  ({cpu}, {plat})"))
+                .collect();
+            let selection = Select::new()
+                .with_prompt("Select the default target triplet")
+                .items(&items)
+                .default(0)
+                .interact()?;
+            SUPPORTED_TARGETS[selection].0.to_string()
+        }
+    };
 
     fs::create_dir_all(&project_dir)?;
     fs::create_dir_all(project_dir.join("src"))?;

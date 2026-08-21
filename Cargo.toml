@@ -1,6 +1,6 @@
 [package]
 name = "cart"
-version = "0.3.0"
+version = "0.4.0"
 edition = "2021"
 authors = ["Dave Grantham <dwg@linuxprogrammer.org>"]
 license = "Apache-2.0"
@@ -27,6 +27,7 @@ semver = "1"
 git2 = "0.18"
 sha2 = "0.10"
 tempfile = "3"
+dialoguer = "0.11"
 
 [dev-dependencies]
 tempfile = "3"
