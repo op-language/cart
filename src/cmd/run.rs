@@ -80,11 +80,10 @@ pub fn run(
     }
     cmd.arg(&rom_path);
 
-    let status = cmd
-        .status()
+    cmd.spawn()
         .map_err(|e| anyhow::anyhow!("E501: failed to launch emulator: {e}"))?;
 
-    std::process::exit(status.code().unwrap_or(1));
+    Ok(())
 }
 
 fn which(name: &str) -> Option<std::path::PathBuf> {
