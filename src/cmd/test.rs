@@ -9,7 +9,7 @@ use std::process::Command;
 
 pub fn test(manifest_path: &Path, target: Option<String>) -> Result<()> {
     let manifest = CartManifest::load(manifest_path)?;
-    let config = GlobalConfig::load();
+    let config = GlobalConfig::load_or_create();
 
     let tests_dir = manifest_path
         .parent()

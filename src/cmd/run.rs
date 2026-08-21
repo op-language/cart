@@ -13,7 +13,7 @@ pub fn run(
     profile: Option<String>,
 ) -> Result<()> {
     let manifest = CartManifest::load(manifest_path)?;
-    let config = GlobalConfig::load();
+    let config = GlobalConfig::load_or_create();
 
     let profile_name = profile.as_deref().unwrap_or("default");
 

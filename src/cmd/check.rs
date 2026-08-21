@@ -8,7 +8,7 @@ use std::path::Path;
 
 pub fn check(manifest_path: &Path, target: Option<String>) -> Result<()> {
     let manifest = CartManifest::load(manifest_path)?;
-    let config = GlobalConfig::load();
+    let config = GlobalConfig::load_or_create();
     let carts_dir = GlobalConfig::carts_dir();
 
     std::fs::create_dir_all(&carts_dir)?;

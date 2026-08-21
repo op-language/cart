@@ -18,7 +18,7 @@ pub fn build(
     frozen: bool,
 ) -> Result<()> {
     let manifest = CartManifest::load(manifest_path)?;
-    let config = GlobalConfig::load();
+    let config = GlobalConfig::load_or_create();
     let carts_dir = GlobalConfig::carts_dir();
     let std_dir = GlobalConfig::std_dir();
 
