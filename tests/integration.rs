@@ -66,7 +66,7 @@ fn init_then_build_rom() {
     let old_path = std::env::var("PATH").unwrap_or_default();
 
     std::env::set_current_dir(tmp.path()).expect("cd");
-    cmd::init::init(project_name, false, Some(triplet.to_string())).expect("init");
+    cmd::init::init(project_name, false, Some(triplet.to_string()), None).expect("init");
     let project = tmp.path().join(project_name);
 
     make_fake_opc(tmp.path());
@@ -114,7 +114,7 @@ fn init_then_build_lib() {
     let old_path = std::env::var("PATH").unwrap_or_default();
 
     std::env::set_current_dir(tmp.path()).expect("cd");
-    cmd::init::init(project_name, true, Some(triplet.to_string())).expect("init");
+    cmd::init::init(project_name, true, Some(triplet.to_string()), None).expect("init");
     let project = tmp.path().join(project_name);
 
     make_fake_opc(tmp.path());
@@ -169,7 +169,7 @@ fn init_then_build_with_git_dep() {
     let old_home = std::env::var("HOME").unwrap_or_default();
 
     std::env::set_current_dir(tmp.path()).expect("cd");
-    cmd::init::init(project_name, false, Some(triplet.to_string())).expect("init");
+    cmd::init::init(project_name, false, Some(triplet.to_string()), None).expect("init");
     let project = tmp.path().join(project_name);
 
     let manifest_text = fs::read_to_string(project.join("Cart.toml")).expect("read Cart.toml");
