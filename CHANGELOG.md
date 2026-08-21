@@ -7,10 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-No changes. `cart` 0.3.0 is the unchanged companion to the `op` 0.2.0 and
-`std` 0.2.0 release cohort. `cart` has no Cargo dependency on any `op-*`
-crate or `std`, and the `mod`/`use` and `.opb` changes in this cohort do
-not affect `cart` behavior.
+No changes.
+
+## [0.5.0]
+
+### Changed
+- Updated `SUPPORTED_TARGETS` in `src/targets.rs`. Replaced
+  `mos65sc02-atari-lynx` with `vl65nc02-atari-lynx`. Replaced
+  `z80-nintendo-gameboy` with `sm83-nintendo-gameboy`. Replaced
+  `z80-nintendo-gameboy-color` with `sm83-nintendo-gameboy-color`.
+  Updated CPU names to `VLSI VL65NC02` and `Sharp SM83`.
+
+## [0.4.0]
+
+### Added
+- `dialoguer` dependency for the interactive target selection.
+- `SUPPORTED_TARGETS` registry in `src/targets.rs`. It lists every
+  canonical triplet, CPU name, and platform name.
+- `cart init` shows an interactive select list when the user does
+  not supply the `--target` flag. The selected triplet becomes the
+  `default` target in `Cart.toml`. The `--target` flag overrides the
+  prompt.
+
+### Changed
+- All tests use `rp2A03-nintendo-nes-ntsc` as the fixture target.
+- The technical-design doc references
+  `rp2A03-nintendo-nes-ntsc`.
 
 ## [0.3.0]
 

@@ -17,7 +17,7 @@ fn init_rom_project() {
     let result = cmd::init::init(
         project_name,
         false,
-        Some("mos6502-nintendo-nes-ntsc".to_string()),
+        Some("rp2A03-nintendo-nes-ntsc".to_string()),
     );
     let _ = std::env::set_current_dir(&old_dir);
     result.expect("init");
@@ -30,7 +30,7 @@ fn init_rom_project() {
     let manifest_text = fs::read_to_string(project_path.join("Cart.toml")).expect("read");
     assert!(manifest_text.contains("mygame"));
     assert!(manifest_text.contains("[[rom]]"));
-    assert!(manifest_text.contains("mos6502-nintendo-nes-ntsc"));
+    assert!(manifest_text.contains("rp2A03-nintendo-nes-ntsc"));
 }
 
 #[test]
@@ -45,7 +45,7 @@ fn init_lib_project() {
     let result = cmd::init::init(
         project_name,
         true,
-        Some("mos6502-nintendo-nes-ntsc".to_string()),
+        Some("rp2A03-nintendo-nes-ntsc".to_string()),
     );
     let _ = std::env::set_current_dir(&old_dir);
     result.expect("init");
@@ -81,7 +81,7 @@ fn init_rom_manifest_matches_template() {
     let tmp = tempdir().expect("tempdir");
     let project_name = "demo";
     let project_path = tmp.path().join(project_name);
-    let triplet = "mos6502-nintendo-nes-ntsc";
+    let triplet = "rp2A03-nintendo-nes-ntsc";
 
     let old_dir = std::env::current_dir().expect("cwd");
     std::env::set_current_dir(tmp.path()).expect("cd");
@@ -115,7 +115,7 @@ fn init_lib_manifest_matches_template() {
     let tmp = tempdir().expect("tempdir");
     let project_name = "demolib";
     let project_path = tmp.path().join(project_name);
-    let triplet = "mos6502-nintendo-nes-nes";
+    let triplet = "rp2A03-nintendo-nes-nes";
 
     let old_dir = std::env::current_dir().expect("cwd");
     std::env::set_current_dir(tmp.path()).expect("cd");
@@ -168,7 +168,7 @@ fn init_creates_git_repo() {
     cmd::init::init(
         project_name,
         false,
-        Some("mos6502-nintendo-nes-ntsc".to_string()),
+        Some("rp2A03-nintendo-nes-ntsc".to_string()),
     )
     .expect("init");
     let _ = std::env::set_current_dir(&old_dir);

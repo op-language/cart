@@ -2,8 +2,8 @@ use cart::triplet::{TargetTriplet, TripletError};
 
 #[test]
 fn parse_three_part_triplet() {
-    let t = TargetTriplet::parse("mos6502-nintendo-nes").expect("parse");
-    assert_eq!(t.cpu, "mos6502");
+    let t = TargetTriplet::parse("rp2A03-nintendo-nes").expect("parse");
+    assert_eq!(t.cpu, "rp2A03");
     assert_eq!(t.manufacturer, "nintendo");
     assert_eq!(t.machine, "nes");
     assert_eq!(t.variant, "");
@@ -11,8 +11,8 @@ fn parse_three_part_triplet() {
 
 #[test]
 fn parse_four_part_triplet() {
-    let t = TargetTriplet::parse("mos6502-nintendo-nes-ntsc").expect("parse");
-    assert_eq!(t.cpu, "mos6502");
+    let t = TargetTriplet::parse("rp2A03-nintendo-nes-ntsc").expect("parse");
+    assert_eq!(t.cpu, "rp2A03");
     assert_eq!(t.manufacturer, "nintendo");
     assert_eq!(t.machine, "nes");
     assert_eq!(t.variant, "ntsc");
@@ -44,6 +44,6 @@ fn as_str_with_variant() {
 
 #[test]
 fn display_trait() {
-    let t = TargetTriplet::parse("mos6502-nintendo-nes-ntsc").expect("parse");
-    assert_eq!(format!("{t}"), "mos6502-nintendo-nes-ntsc");
+    let t = TargetTriplet::parse("rp2A03-nintendo-nes-ntsc").expect("parse");
+    assert_eq!(format!("{t}"), "rp2A03-nintendo-nes-ntsc");
 }

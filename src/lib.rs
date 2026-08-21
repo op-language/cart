@@ -12,4 +12,5 @@ pub mod manifest;
 pub mod opc;
 pub mod registry;
 pub mod resolver;
+pub mod targets;
 pub mod triplet;
