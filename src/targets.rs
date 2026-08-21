@@ -17,7 +17,7 @@ pub const SUPPORTED_TARGETS: &[(&str, &str, &str)] = &[
     ("mos6502-atari-2600", "MOS 6502", "Atari 2600"),
     ("mos6502-atari-5200", "MOS 6502", "Atari 5200"),
     ("mos6502-atari-7800", "MOS 6502", "Atari 7800"),
-    ("mos65sc02-atari-lynx", "MOS 65SC02", "Atari Lynx"),
+    ("vl65nc02-atari-lynx", "VLSI VL65NC02", "Atari Lynx"),
     ("mos6502-commodore-64", "MOS 6502", "Commodore 64"),
     ("mos6502-nec-pcengine", "MOS 6502", "NEC PC Engine"),
     ("rp2A03-nintendo-nes-ntsc", "Ricoh RP2A03", "NES NTSC"),
