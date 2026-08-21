@@ -93,6 +93,11 @@ pub fn output_extension(format: &str) -> &str {
     match format {
         "ines" => "nes",
         "lnx" => "lnx",
+        "gb" => "gb",
+        "sega" => "md",
+        "snes" => "sfc",
+        "sms" => "sms",
+        "a78" => "a78",
         "raw" => "bin",
         "hex" => "hex",
         _ => "bin",

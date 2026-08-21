@@ -231,6 +231,18 @@ fn default_format_for(target: &str) -> Option<String> {
         Some("ines".to_string())
     } else if target.contains("lynx") {
         Some("lnx".to_string())
+    } else if target.contains("gameboy-color") {
+        Some("gb".to_string())
+    } else if target.contains("gameboy") {
+        Some("gb".to_string())
+    } else if target.contains("snes") {
+        Some("snes".to_string())
+    } else if target.contains("genesis") {
+        Some("sega".to_string())
+    } else if target.contains("mastersystem") || target.contains("gamegear") || target.contains("sg1000") {
+        Some("sms".to_string())
+    } else if target.contains("atari-7800") {
+        Some("a78".to_string())
     } else {
         None
     }
