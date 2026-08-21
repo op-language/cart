@@ -20,8 +20,20 @@ pub fn build(
     let manifest = CartManifest::load(manifest_path)?;
     let config = GlobalConfig::load();
     let carts_dir = GlobalConfig::carts_dir();
+    let std_dir = GlobalConfig::std_dir();
 
     std::fs::create_dir_all(&carts_dir)?;
+
+    // Auto-checkout the std lib to ~/.cart/std/ if not present.
+    if !std_dir.exists() {
+        eprintln!("Checking out std lib to {}...", std_dir.display());
+        if let Some(parent) = std_dir.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        git2::build::RepoBuilder::new()
+            .clone("https://github.com/op-language/std", &std_dir)
+            .map_err(|e| anyhow::anyhow!("E510: failed to clone std lib: {e}"))?;
+    }
 
     let graph = resolver::resolve(&manifest, &carts_dir, config.default_git_base())?;
 
@@ -46,7 +58,7 @@ pub fn build(
     lock.save(&lock_path)?;
 
     // Collect include paths from resolved dependencies.
-    let include_paths: Vec<String> = graph
+    let mut include_paths: Vec<String> = graph
         .packages
         .iter()
         .map(|pkg| match &pkg.source {
@@ -57,6 +69,10 @@ pub fn build(
             }
         })
         .collect();
+
+    // Always add ~/.cart/std/src as a default include path. The opc
+    // compiler requires the std lib for all projects.
+    include_paths.push(std_dir.join("src").to_string_lossy().to_string());
 
     let opt_level = if debug {
         0

@@ -75,6 +75,12 @@ impl GlobalConfig {
         std::path::PathBuf::from(home).join(".carts")
     }
 
+    /// Get the std lib directory `~/.cart/std/`.
+    pub fn std_dir() -> std::path::PathBuf {
+        let home = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
+        std::path::PathBuf::from(home).join(".cart").join("std")
+    }
+
     /// Get the default git base URL for the registry.
     pub fn default_git_base(&self) -> Option<&str> {
         self.registry.as_ref()?.default_git_base.as_deref()
