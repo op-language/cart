@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 No changes.
 
+## [0.5.0]
+
+### Changed
+- Updated `SUPPORTED_TARGETS` in `src/targets.rs`. Replaced
+  `mos65sc02-atari-lynx` with `vl65nc02-atari-lynx`. Replaced
+  `z80-nintendo-gameboy` with `sm83-nintendo-gameboy`. Replaced
+  `z80-nintendo-gameboy-color` with `sm83-nintendo-gameboy-color`.
+  Updated CPU names to `VLSI VL65NC02` and `Sharp SM83`.
+
 ## [0.4.0]
 
 ### Added
