@@ -49,11 +49,11 @@ pub fn build(
     let include_paths: Vec<String> = graph
         .packages
         .iter()
-        .filter_map(|pkg| match &pkg.source {
-            LockedSource::Path { dir } => Some(format!("{dir}/src")),
+        .map(|pkg| match &pkg.source {
+            LockedSource::Path { dir } => format!("{dir}/src"),
             LockedSource::Git { .. } => {
                 // Git deps are installed in ~/.carts/<name>/
-                Some(format!("{}/{}/src", carts_dir.display(), pkg.name))
+                format!("{}/{}/src", carts_dir.display(), pkg.name)
             }
         })
         .collect();
