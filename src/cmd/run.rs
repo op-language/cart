@@ -37,18 +37,21 @@ pub fn run(
         .or_else(|| run_profile.target.clone())
         .unwrap_or_else(|| rom.target.clone());
 
-    super::build::build(
-        manifest_path,
-        Some(rom_target.clone()),
-        release,
-        false,
-        Vec::new(),
-        None,
-        false,
-    )?;
-
     let rom_path =
-        super::build::rom_output_path(&manifest, manifest_path, &rom_target, &rom.name, None);
+        super::build::rom_output_path(&manifest, manifest_path, &rom_target, &rom.name, rom.format.as_deref());
+
+    // Build the ROM if it does not exist.
+    if !rom_path.exists() {
+        super::build::build(
+            manifest_path,
+            Some(rom_target.clone()),
+            release,
+            false,
+            Vec::new(),
+            None,
+            false,
+        )?;
+    }
 
     if !rom_path.exists() {
         return Err(anyhow::anyhow!(
