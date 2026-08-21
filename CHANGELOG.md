@@ -34,6 +34,9 @@ No changes.
   Previously, `cart run` always called `cart build` unconditionally.
 - `cart run` now passes the manifest `rom.format` field to
   `rom_output_path` to determine the correct ROM file path.
+- `cart run` now launches the emulator with `spawn` instead of
+  `status`. The command returns immediately and does not wait for
+  the emulator to exit.
 
 ## [0.5.0]
 
