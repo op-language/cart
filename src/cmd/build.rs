@@ -1,7 +1,7 @@
 //! `cart build` — compile the project and write the ROM image.
 
 use crate::config::GlobalConfig;
-use crate::lockfile::CartLock;
+use crate::lockfile::{CartLock, LockedSource};
 use crate::manifest::CartManifest;
 use crate::opc::{self, OpcArgs, OpcStage};
 use crate::resolver;
@@ -44,6 +44,19 @@ pub fn build(
     let mut lock = existing_lock.unwrap_or_else(CartLock::new);
     lock.update_from_graph(&graph);
     lock.save(&lock_path)?;
+
+    // Collect include paths from resolved dependencies.
+    let include_paths: Vec<String> = graph
+        .packages
+        .iter()
+        .filter_map(|pkg| match &pkg.source {
+            LockedSource::Path { dir } => Some(format!("{dir}/src")),
+            LockedSource::Git { .. } => {
+                // Git deps are installed in ~/.carts/<name>/
+                Some(format!("{}/{}/src", carts_dir.display(), pkg.name))
+            }
+        })
+        .collect();
 
     let opt_level = if debug {
         0
@@ -101,6 +114,7 @@ pub fn build(
                 format: Some("raw".to_string()),
                 output: Some(output.clone()),
                 stage: OpcStage::Full,
+                include: include_paths.clone(),
             };
 
             opc::invoke(&args)?;
@@ -152,6 +166,7 @@ pub fn build(
             format: format.clone(),
             output: Some(output.clone()),
             stage: OpcStage::Full,
+            include: include_paths.clone(),
         };
 
         opc::invoke(&args)?;

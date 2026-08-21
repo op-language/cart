@@ -20,6 +20,7 @@ fn opc_args_build_command() {
         format: Some("ines".to_string()),
         output: Some(PathBuf::from("out.nes")),
         stage: opc::OpcStage::Full,
+        include: Vec::new(),
     };
     let cmd = args.to_command();
     let program = cmd.get_program().to_string_lossy();
@@ -37,6 +38,7 @@ fn opc_args_parse_stage() {
         format: None,
         output: None,
         stage: opc::OpcStage::Parse,
+        include: Vec::new(),
     };
     let cmd = args.to_command();
     let cmd_args: Vec<String> = cmd

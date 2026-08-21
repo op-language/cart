@@ -15,6 +15,7 @@ pub struct OpcArgs {
     pub format: Option<String>,
     pub output: Option<PathBuf>,
     pub stage: OpcStage,
+    pub include: Vec<String>,
 }
 
 /// The pipeline stage to run.
@@ -33,6 +34,9 @@ impl OpcArgs {
         cmd.arg("--target").arg(&self.target);
         for f in &self.features {
             cmd.arg("--feature").arg(f);
+        }
+        for inc in &self.include {
+            cmd.arg("-I").arg(inc);
         }
         cmd.arg("-O").arg(self.opt_level.to_string());
         if let Some(fmt) = &self.format {

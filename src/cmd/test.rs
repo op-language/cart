@@ -85,6 +85,7 @@ pub fn test(manifest_path: &Path, target: Option<String>) -> Result<()> {
             format: Some("raw".to_string()),
             output: Some(output.clone()),
             stage: OpcStage::Full,
+            include: Vec::new(),
         };
 
         if let Err(e) = opc::invoke(&args) {
