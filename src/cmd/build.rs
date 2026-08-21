@@ -156,10 +156,14 @@ pub fn build(
             .join(&rom_target);
         std::fs::create_dir_all(&output_dir)?;
 
-        let ext = format
-            .as_deref()
-            .map(opc::output_extension)
-            .unwrap_or("bin");
+        // Determine the output format. Prefer the manifest rom.format
+        // field, then the CLI --format flag, then "bin" as default.
+        let rom_format = rom
+            .format
+            .clone()
+            .or_else(|| format.clone())
+            .unwrap_or_else(|| "bin".to_string());
+        let ext = opc::output_extension(&rom_format);
         let output = output_dir.join(format!("{}.{}", rom.name, ext));
 
         let all_features = [
@@ -179,7 +183,7 @@ pub fn build(
             target: rom_target,
             features: all_features,
             opt_level,
-            format: format.clone(),
+            format: Some(rom_format),
             output: Some(output.clone()),
             stage: OpcStage::Full,
             include: include_paths.clone(),
@@ -194,14 +198,23 @@ pub fn build(
 }
 
 /// Get the output path for a ROM target. Used by `cart run`.
+/// Uses the manifest rom.format field if present, otherwise the
+/// passed-in format argument.
 pub fn rom_output_path(
-    _manifest: &CartManifest,
+    manifest: &CartManifest,
     manifest_path: &Path,
     target: &str,
     rom_name: &str,
     format: Option<&str>,
 ) -> PathBuf {
-    let ext = format.map(opc::output_extension).unwrap_or("bin");
+    // Check the manifest for a ROM with the given name and target.
+    let rom_format = manifest
+        .rom
+        .iter()
+        .find(|r| r.name == rom_name && r.target == target)
+        .and_then(|r| r.format.as_deref())
+        .or(format);
+    let ext = rom_format.map(opc::output_extension).unwrap_or("bin");
     manifest_path
         .parent()
         .unwrap_or(Path::new("."))
