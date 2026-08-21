@@ -52,6 +52,7 @@ pub fn check(manifest_path: &Path, target: Option<String>) -> Result<()> {
             format: None,
             output: None,
             stage: OpcStage::Parse,
+            include: Vec::new(),
         };
 
         match opc::invoke(&args) {

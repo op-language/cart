@@ -71,10 +71,11 @@ fn init_then_build_rom() {
     let _ = std::env::set_current_dir(&old_dir);
 
     result.expect("build should succeed");
+    // NES target uses format = "ines" which produces .nes extension.
     let output = project
         .join("target")
         .join(triplet)
-        .join(format!("{project_name}.bin"));
+        .join(format!("{project_name}.nes"));
     assert!(
         output.exists(),
         "expected rom output at {}",
@@ -199,10 +200,11 @@ fn init_then_build_with_git_dep() {
         "expected Cart.lock to record std package, got:\n{lock_text}"
     );
 
+    // NES target uses format = "ines" which produces .nes extension.
     let output = project
         .join("target")
         .join(triplet)
-        .join(format!("{project_name}.bin"));
+        .join(format!("{project_name}.nes"));
     assert!(
         output.exists(),
         "expected rom output at {}",

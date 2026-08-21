@@ -86,6 +86,7 @@ pub fn init(name: &str, lib: bool, target: Option<String>) -> Result<()> {
                 name: name.to_string(),
                 path: Some("src/cart.op".to_string()),
                 target: default_target.clone(),
+                format: default_format_for(&default_target),
             }],
             dependencies: Default::default(),
             dev_dependencies: Default::default(),
@@ -117,6 +118,16 @@ fn init_git(dir: &Path) -> Result<()> {
         eprintln!("warning: git init failed: {e}");
     }
     Ok(())
+}
+
+fn default_format_for(target: &str) -> Option<String> {
+    if target.contains("nes") {
+        Some("ines".to_string())
+    } else if target.contains("lynx") {
+        Some("lnx".to_string())
+    } else {
+        None
+    }
 }
 
 fn validate_name(name: &str) -> Result<()> {

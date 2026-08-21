@@ -1,7 +1,7 @@
 //! `cart build` — compile the project and write the ROM image.
 
 use crate::config::GlobalConfig;
-use crate::lockfile::CartLock;
+use crate::lockfile::{CartLock, LockedSource};
 use crate::manifest::CartManifest;
 use crate::opc::{self, OpcArgs, OpcStage};
 use crate::resolver;
@@ -20,8 +20,20 @@ pub fn build(
     let manifest = CartManifest::load(manifest_path)?;
     let config = GlobalConfig::load();
     let carts_dir = GlobalConfig::carts_dir();
+    let std_dir = GlobalConfig::std_dir();
 
     std::fs::create_dir_all(&carts_dir)?;
+
+    // Auto-checkout the std lib to ~/.cart/std/ if not present.
+    if !std_dir.exists() {
+        eprintln!("Checking out std lib to {}...", std_dir.display());
+        if let Some(parent) = std_dir.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        git2::build::RepoBuilder::new()
+            .clone("https://github.com/op-language/std", &std_dir)
+            .map_err(|e| anyhow::anyhow!("E510: failed to clone std lib: {e}"))?;
+    }
 
     let graph = resolver::resolve(&manifest, &carts_dir, config.default_git_base())?;
 
@@ -44,6 +56,23 @@ pub fn build(
     let mut lock = existing_lock.unwrap_or_else(CartLock::new);
     lock.update_from_graph(&graph);
     lock.save(&lock_path)?;
+
+    // Collect include paths from resolved dependencies.
+    let mut include_paths: Vec<String> = graph
+        .packages
+        .iter()
+        .map(|pkg| match &pkg.source {
+            LockedSource::Path { dir } => format!("{dir}/src"),
+            LockedSource::Git { .. } => {
+                // Git deps are installed in ~/.carts/<name>/
+                format!("{}/{}/src", carts_dir.display(), pkg.name)
+            }
+        })
+        .collect();
+
+    // Always add ~/.cart/std/src as a default include path. The opc
+    // compiler requires the std lib for all projects.
+    include_paths.push(std_dir.join("src").to_string_lossy().to_string());
 
     let opt_level = if debug {
         0
@@ -101,6 +130,7 @@ pub fn build(
                 format: Some("raw".to_string()),
                 output: Some(output.clone()),
                 stage: OpcStage::Full,
+                include: include_paths.clone(),
             };
 
             opc::invoke(&args)?;
@@ -126,10 +156,14 @@ pub fn build(
             .join(&rom_target);
         std::fs::create_dir_all(&output_dir)?;
 
-        let ext = format
-            .as_deref()
-            .map(opc::output_extension)
-            .unwrap_or("bin");
+        // Determine the output format. Prefer the manifest rom.format
+        // field, then the CLI --format flag, then "bin" as default.
+        let rom_format = rom
+            .format
+            .clone()
+            .or_else(|| format.clone())
+            .unwrap_or_else(|| "bin".to_string());
+        let ext = opc::output_extension(&rom_format);
         let output = output_dir.join(format!("{}.{}", rom.name, ext));
 
         let all_features = [
@@ -149,9 +183,10 @@ pub fn build(
             target: rom_target,
             features: all_features,
             opt_level,
-            format: format.clone(),
+            format: Some(rom_format),
             output: Some(output.clone()),
             stage: OpcStage::Full,
+            include: include_paths.clone(),
         };
 
         opc::invoke(&args)?;
@@ -163,14 +198,23 @@ pub fn build(
 }
 
 /// Get the output path for a ROM target. Used by `cart run`.
+/// Uses the manifest rom.format field if present, otherwise the
+/// passed-in format argument.
 pub fn rom_output_path(
-    _manifest: &CartManifest,
+    manifest: &CartManifest,
     manifest_path: &Path,
     target: &str,
     rom_name: &str,
     format: Option<&str>,
 ) -> PathBuf {
-    let ext = format.map(opc::output_extension).unwrap_or("bin");
+    // Check the manifest for a ROM with the given name and target.
+    let rom_format = manifest
+        .rom
+        .iter()
+        .find(|r| r.name == rom_name && r.target == target)
+        .and_then(|r| r.format.as_deref())
+        .or(format);
+    let ext = rom_format.map(opc::output_extension).unwrap_or("bin");
     manifest_path
         .parent()
         .unwrap_or(Path::new("."))

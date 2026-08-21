@@ -9,6 +9,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 No changes.
 
+## [0.6.0]
+
+### Added
+- `format` field in the `[[rom]]` section of `Cart.toml`. The build
+  uses this field to determine the output file extension. For the NES,
+  `format = "ines"` produces a `.nes` file. `cart init` sets the
+  format automatically for NES and Lynx targets.
+- `--include` path passing to the `opc` compiler. The build collects
+  include paths from resolved dependencies and passes them with `-I`
+  flags.
+- Auto-checkout of the std lib to `~/.cart/std/`. If the std lib is
+  not present, `cart build` clones it from
+  `https://github.com/op-language/std`.
+- `~/.cart/std/src` is always added as a default include path.
+
+### Changed
+- `cart build` now uses the manifest `rom.format` field to determine
+  the output format, falling back to the `--format` CLI flag, then
+  `"bin"` as the default.
+- `rom_output_path` now checks the manifest for the ROM format field
+  to determine the correct file extension.
+- `cart run` now builds the ROM only if it does not already exist.
+  Previously, `cart run` always called `cart build` unconditionally.
+- `cart run` now passes the manifest `rom.format` field to
+  `rom_output_path` to determine the correct ROM file path.
+
 ## [0.5.0]
 
 ### Changed

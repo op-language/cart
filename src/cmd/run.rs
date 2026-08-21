@@ -37,18 +37,26 @@ pub fn run(
         .or_else(|| run_profile.target.clone())
         .unwrap_or_else(|| rom.target.clone());
 
-    super::build::build(
+    let rom_path = super::build::rom_output_path(
+        &manifest,
         manifest_path,
-        Some(rom_target.clone()),
-        release,
-        false,
-        Vec::new(),
-        None,
-        false,
-    )?;
+        &rom_target,
+        &rom.name,
+        rom.format.as_deref(),
+    );
 
-    let rom_path =
-        super::build::rom_output_path(&manifest, manifest_path, &rom_target, &rom.name, None);
+    // Build the ROM if it does not exist.
+    if !rom_path.exists() {
+        super::build::build(
+            manifest_path,
+            Some(rom_target.clone()),
+            release,
+            false,
+            Vec::new(),
+            None,
+            false,
+        )?;
+    }
 
     if !rom_path.exists() {
         return Err(anyhow::anyhow!(
@@ -72,11 +80,10 @@ pub fn run(
     }
     cmd.arg(&rom_path);
 
-    let status = cmd
-        .status()
+    cmd.spawn()
         .map_err(|e| anyhow::anyhow!("E501: failed to launch emulator: {e}"))?;
 
-    std::process::exit(status.code().unwrap_or(1));
+    Ok(())
 }
 
 fn which(name: &str) -> Option<std::path::PathBuf> {

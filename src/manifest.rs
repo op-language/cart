@@ -58,6 +58,15 @@ pub struct Rom {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub path: Option<String>,
     pub target: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub format: Option<String>,
+}
+
+impl Rom {
+    /// Get the output format, if specified.
+    pub fn format(&self) -> Option<&str> {
+        self.format.as_deref()
+    }
 }
 
 /// The `[target]` section.
