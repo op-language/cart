@@ -201,8 +201,7 @@ fn init_with_add_run_profile_nes() {
     .expect("init");
     let _ = std::env::set_current_dir(&old_dir);
 
-    let manifest_text =
-        fs::read_to_string(project_path.join("Cart.toml")).expect("read Cart.toml");
+    let manifest_text = fs::read_to_string(project_path.join("Cart.toml")).expect("read Cart.toml");
     assert!(
         manifest_text.contains("[[run.profile]]"),
         "should have a run profile section"
@@ -235,8 +234,7 @@ fn init_with_add_run_profile_gameboy() {
     .expect("init");
     let _ = std::env::set_current_dir(&old_dir);
 
-    let manifest_text =
-        fs::read_to_string(project_path.join("Cart.toml")).expect("read Cart.toml");
+    let manifest_text = fs::read_to_string(project_path.join("Cart.toml")).expect("read Cart.toml");
     assert!(
         manifest_text.contains("[[run.profile]]"),
         "should have a run profile section"
@@ -269,8 +267,7 @@ fn init_without_run_profile_has_no_profile() {
     std::env::remove_var("CART_NON_INTERACTIVE");
     let _ = std::env::set_current_dir(&old_dir);
 
-    let manifest_text =
-        fs::read_to_string(project_path.join("Cart.toml")).expect("read Cart.toml");
+    let manifest_text = fs::read_to_string(project_path.join("Cart.toml")).expect("read Cart.toml");
     assert!(
         !manifest_text.contains("[[run.profile]]"),
         "should not have a run profile section in non-interactive mode"
@@ -295,8 +292,7 @@ fn init_lib_project_ignores_run_profile() {
     .expect("init");
     let _ = std::env::set_current_dir(&old_dir);
 
-    let manifest_text =
-        fs::read_to_string(project_path.join("Cart.toml")).expect("read Cart.toml");
+    let manifest_text = fs::read_to_string(project_path.join("Cart.toml")).expect("read Cart.toml");
     assert!(
         !manifest_text.contains("[[run.profile]]"),
         "lib projects should not have a run profile"

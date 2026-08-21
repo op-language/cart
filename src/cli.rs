@@ -127,7 +127,12 @@ pub fn run() -> Result<()> {
         .unwrap_or_else(|| std::path::PathBuf::from("Cart.toml"));
 
     match args.command {
-        Command::Init { name, lib, target, add_run_profile } => cmd::init::init(&name, lib, target, add_run_profile),
+        Command::Init {
+            name,
+            lib,
+            target,
+            add_run_profile,
+        } => cmd::init::init(&name, lib, target, add_run_profile),
         Command::Build {
             target,
             release,

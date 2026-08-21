@@ -2,7 +2,9 @@
 
 use crate::config::GlobalConfig;
 use crate::emulators::{current_os, is_in_path};
-use crate::manifest::{CartManifest, Features, Lib, Package, Rom, RunProfile, RunProfileSection, TargetSection};
+use crate::manifest::{
+    CartManifest, Features, Lib, Package, Rom, RunProfile, RunProfileSection, TargetSection,
+};
 use crate::targets::SUPPORTED_TARGETS;
 use anyhow::Result;
 use std::fs;
@@ -239,7 +241,10 @@ fn default_format_for(target: &str) -> Option<String> {
         Some("snes".to_string())
     } else if target.contains("genesis") {
         Some("sega".to_string())
-    } else if target.contains("mastersystem") || target.contains("gamegear") || target.contains("sg1000") {
+    } else if target.contains("mastersystem")
+        || target.contains("gamegear")
+        || target.contains("sg1000")
+    {
         Some("sms".to_string())
     } else if target.contains("atari-7800") {
         Some("a78".to_string())
