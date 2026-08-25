@@ -75,6 +75,12 @@ pub fn run(
     eprintln!("Running {} in {}...", rom.name, run_profile.emulator);
 
     let mut cmd = Command::new(&emulator);
+    // Auto-determine emulator-specific model arguments (e.g. SameBoy's
+    // `--model dmg` / `--model cgb`) from the target triplet and the
+    // emulator name.
+    for arg in crate::emulators::emulator_model_args(&rom_target, &run_profile.emulator) {
+        cmd.arg(arg);
+    }
     for arg in &run_profile.args {
         cmd.arg(arg);
     }

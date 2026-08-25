@@ -286,6 +286,30 @@ pub fn default_emulator_matrix() -> Vec<EmulatorEntry> {
     entries
 }
 
+/// Return the emulator-specific command-line arguments that select the
+/// console model for the given target triplet and emulator binary name.
+///
+/// Some emulators require an explicit model flag to run a ROM in the
+/// correct console mode. SameBoy, for example, uses `--model dmg` for
+/// Game Boy (DMG) ROMs and `--model cgb` for Game Boy Color ROMs.
+///
+/// Returns an empty vector when the given emulator does not need a model
+/// flag for the given target triplet.
+pub fn emulator_model_args(triplet: &str, emulator: &str) -> Vec<String> {
+    // Compare against the binary name (last path component) so that
+    // absolute or relative paths to the emulator also match.
+    let emu = emulator.rsplit(['/', '\\']).next().unwrap_or(emulator);
+    match (triplet, emu) {
+        ("sm83-nintendo-gameboy", "sameboy") => {
+            vec!["--model".to_string(), "dmg".to_string()]
+        }
+        ("sm83-nintendo-gameboy-color", "sameboy") => {
+            vec!["--model".to_string(), "cgb".to_string()]
+        }
+        _ => Vec::new(),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -375,5 +399,34 @@ mod tests {
     fn test_current_os_returns_known_value() {
         let os = current_os();
         assert!(os == "linux" || os == "macos" || os == "windows");
+    }
+
+    #[test]
+    fn test_model_args_sameboy_dmg() {
+        let args = emulator_model_args("sm83-nintendo-gameboy", "sameboy");
+        assert_eq!(args, vec!["--model".to_string(), "dmg".to_string()]);
+    }
+
+    #[test]
+    fn test_model_args_sameboy_cgb() {
+        let args = emulator_model_args("sm83-nintendo-gameboy-color", "sameboy");
+        assert_eq!(args, vec!["--model".to_string(), "cgb".to_string()]);
+    }
+
+    #[test]
+    fn test_model_args_sameboy_path() {
+        // Absolute/relative paths to the emulator should also match.
+        let args = emulator_model_args("sm83-nintendo-gameboy", "/usr/local/bin/sameboy");
+        assert_eq!(args, vec!["--model".to_string(), "dmg".to_string()]);
+    }
+
+    #[test]
+    fn test_model_args_other_emulator_empty() {
+        assert!(emulator_model_args("sm83-nintendo-gameboy", "mgba-sdl").is_empty());
+    }
+
+    #[test]
+    fn test_model_args_other_target_empty() {
+        assert!(emulator_model_args("rp2A03-nintendo-nes-ntsc", "sameboy").is_empty());
     }
 }
