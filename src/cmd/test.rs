@@ -9,7 +9,7 @@ use std::process::Command;
 
 pub fn test(manifest_path: &Path, target: Option<String>) -> Result<()> {
     let manifest = CartManifest::load(manifest_path)?;
-    let config = GlobalConfig::load();
+    let config = GlobalConfig::load_or_create();
 
     let tests_dir = manifest_path
         .parent()
@@ -103,6 +103,9 @@ pub fn test(manifest_path: &Path, target: Option<String>) -> Result<()> {
         })?;
 
         let mut cmd = Command::new(&emulator);
+        for arg in crate::emulators::emulator_model_args(&rom_target, &test_profile.emulator) {
+            cmd.arg(arg);
+        }
         for arg in &test_profile.args {
             cmd.arg(arg);
         }

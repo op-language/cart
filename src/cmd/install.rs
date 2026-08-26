@@ -1,4 +1,4 @@
-//! `cart install` — install a lib in ~/.carts/.
+//! `cart install` — install a lib in ~/.cart/.
 
 use crate::config::GlobalConfig;
 use crate::registry::{self, GitSource};
@@ -6,7 +6,7 @@ use anyhow::Result;
 
 pub fn install(name: &str, git: Option<String>) -> Result<()> {
     let carts_dir = GlobalConfig::carts_dir();
-    let config = GlobalConfig::load();
+    let config = GlobalConfig::load_or_create();
 
     std::fs::create_dir_all(&carts_dir)?;
 

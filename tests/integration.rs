@@ -39,6 +39,22 @@ fn path_with_fake_opc(extra: &std::path::Path) -> String {
     format!("{}:{}", extra.display(), original)
 }
 
+/// Create a minimal std lib in the temp HOME so the auto-clone from
+/// GitHub does not trigger. The build command checks if
+/// `~/.cart/std/` exists and adds `~/.cart/std/src` as an include
+/// path. A bare directory with an empty `src/` is enough.
+fn setup_fake_std(home: &std::path::Path) {
+    let std_dir = home.join(".cart").join("std");
+    let std_src = std_dir.join("src");
+    fs::create_dir_all(&std_src).expect("mkdir fake std src");
+    fs::write(
+        std_dir.join("Cart.toml"),
+        "[package]\nname = \"std\"\nversion = \"0.1.0\"\nedition = \"1\"\n\n[lib]\nname = \"std\"\npath = \"src/lib.op\"\n",
+    )
+    .expect("write fake std Cart.toml");
+    fs::write(std_src.join("lib.op"), "//! std lib\n").expect("write fake std lib.op");
+}
+
 #[test]
 fn init_then_build_rom() {
     let _lock = INT_LOCK.lock().unwrap();
@@ -50,7 +66,7 @@ fn init_then_build_rom() {
     let old_path = std::env::var("PATH").unwrap_or_default();
 
     std::env::set_current_dir(tmp.path()).expect("cd");
-    cmd::init::init(project_name, false, Some(triplet.to_string())).expect("init");
+    cmd::init::init(project_name, false, Some(triplet.to_string()), None).expect("init");
     let project = tmp.path().join(project_name);
 
     make_fake_opc(tmp.path());
@@ -98,7 +114,7 @@ fn init_then_build_lib() {
     let old_path = std::env::var("PATH").unwrap_or_default();
 
     std::env::set_current_dir(tmp.path()).expect("cd");
-    cmd::init::init(project_name, true, Some(triplet.to_string())).expect("init");
+    cmd::init::init(project_name, true, Some(triplet.to_string()), None).expect("init");
     let project = tmp.path().join(project_name);
 
     make_fake_opc(tmp.path());
@@ -153,7 +169,7 @@ fn init_then_build_with_git_dep() {
     let old_home = std::env::var("HOME").unwrap_or_default();
 
     std::env::set_current_dir(tmp.path()).expect("cd");
-    cmd::init::init(project_name, false, Some(triplet.to_string())).expect("init");
+    cmd::init::init(project_name, false, Some(triplet.to_string()), None).expect("init");
     let project = tmp.path().join(project_name);
 
     let manifest_text = fs::read_to_string(project.join("Cart.toml")).expect("read Cart.toml");
@@ -167,6 +183,7 @@ fn init_then_build_with_git_dep() {
     fs::write(project.join("Cart.toml"), &manifest_with_dep).expect("write Cart.toml");
 
     make_fake_opc(tmp.path());
+    setup_fake_std(tmp.path());
     std::env::set_var("PATH", path_with_fake_opc(tmp.path()));
     std::env::set_var("HOME", tmp.path().to_string_lossy().to_string());
     std::env::set_current_dir(&project).expect("cd project");
@@ -187,7 +204,7 @@ fn init_then_build_with_git_dep() {
 
     result.expect("build should succeed");
 
-    let carts_std = tmp.path().join(".carts").join("std");
+    let carts_std = tmp.path().join(".cart").join("std");
     assert!(
         carts_std.join("Cart.toml").exists(),
         "expected std cloned into carts dir at {}",

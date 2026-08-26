@@ -48,6 +48,10 @@ pub enum Command {
         /// Set the default target triplet in Cart.toml.
         #[arg(long)]
         target: Option<String>,
+        /// Skip the run-profile prompt and use this emulator for the
+        /// default run profile.
+        #[arg(long = "add-run-profile", value_name = "EMULATOR")]
+        add_run_profile: Option<String>,
     },
     /// Build the project.
     Build {
@@ -104,7 +108,7 @@ pub enum Command {
     },
     /// Generate documentation from doc comments.
     Doc,
-    /// Install a lib in ~/.carts/.
+    /// Install a lib in ~/.cart/.
     Install {
         name: String,
         /// Git URL for the lib.
@@ -123,7 +127,12 @@ pub fn run() -> Result<()> {
         .unwrap_or_else(|| std::path::PathBuf::from("Cart.toml"));
 
     match args.command {
-        Command::Init { name, lib, target } => cmd::init::init(&name, lib, target),
+        Command::Init {
+            name,
+            lib,
+            target,
+            add_run_profile,
+        } => cmd::init::init(&name, lib, target, add_run_profile),
         Command::Build {
             target,
             release,

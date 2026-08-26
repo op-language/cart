@@ -15,6 +15,8 @@ pub struct GlobalConfig {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub build: Option<BuildConfig>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub emulators: Option<super::emulators::EmulatorsConfig>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub run: Option<super::manifest::RunProfileSection>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub test: Option<super::manifest::TestConfig>,
@@ -50,6 +52,53 @@ impl GlobalConfig {
         }
     }
 
+    /// Load the config from `~/.cart/config.toml`. If the file does not
+    /// exist, write a default config with the emulator matrix and return
+    /// it. If the file exists but fails to parse, return `Default`.
+    pub fn load_or_create() -> Self {
+        let path = Self::config_path();
+        if !path.exists() {
+            let config = Self::default_with_emulators();
+            if let Err(e) = config.save(&path) {
+                eprintln!("warning: failed to write {}: {e}", path.display());
+            }
+            return config;
+        }
+        match Self::load_from(&path) {
+            Ok(c) => c,
+            Err(e) => {
+                eprintln!("warning: failed to load {}: {e}", path.display());
+                Self::default()
+            }
+        }
+    }
+
+    /// Build a default config with the emulator matrix populated.
+    pub fn default_with_emulators() -> Self {
+        Self {
+            registry: None,
+            build: None,
+            emulators: Some(super::emulators::EmulatorsConfig {
+                emulator: super::emulators::default_emulator_matrix(),
+            }),
+            run: None,
+            test: None,
+        }
+    }
+
+    /// Save the config to a specific path.
+    pub fn save(&self, path: &Path) -> anyhow::Result<()> {
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent)
+                .map_err(|e| anyhow::anyhow!("failed to create {}: {e}", parent.display()))?;
+        }
+        let text = toml::to_string_pretty(self)
+            .map_err(|e| anyhow::anyhow!("failed to serialize config: {e}"))?;
+        std::fs::write(path, text)
+            .map_err(|e| anyhow::anyhow!("failed to write {}: {e}", path.display()))?;
+        Ok(())
+    }
+
     /// Load the config from a specific path.
     pub fn load_from(path: &Path) -> anyhow::Result<Self> {
         if !path.exists() {
@@ -69,10 +118,10 @@ impl GlobalConfig {
             .join("config.toml")
     }
 
-    /// Get the default carts directory `~/.carts/`.
+    /// Get the default dependencies directory `~/.cart/`.
     pub fn carts_dir() -> std::path::PathBuf {
         let home = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
-        std::path::PathBuf::from(home).join(".carts")
+        std::path::PathBuf::from(home).join(".cart")
     }
 
     /// Get the std lib directory `~/.cart/std/`.
@@ -99,5 +148,21 @@ impl GlobalConfig {
     /// Find a global run profile by name.
     pub fn run_profile(&self, name: &str) -> Option<&super::manifest::RunProfile> {
         self.run.as_ref()?.profile.iter().find(|p| p.name == name)
+    }
+
+    /// Get the list of known emulator binary names for a given operating
+    /// system and target triplet.
+    pub fn emulators_for(&self, os: &str, target: &str) -> Vec<String> {
+        let empty = Vec::new();
+        let entries = self
+            .emulators
+            .as_ref()
+            .map(|e| &e.emulator)
+            .unwrap_or(&empty);
+        entries
+            .iter()
+            .filter(|e| e.os == os && e.target == target)
+            .map(|e| e.emulator.clone())
+            .collect()
     }
 }

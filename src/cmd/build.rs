@@ -18,7 +18,7 @@ pub fn build(
     frozen: bool,
 ) -> Result<()> {
     let manifest = CartManifest::load(manifest_path)?;
-    let config = GlobalConfig::load();
+    let config = GlobalConfig::load_or_create();
     let carts_dir = GlobalConfig::carts_dir();
     let std_dir = GlobalConfig::std_dir();
 
@@ -64,7 +64,7 @@ pub fn build(
         .map(|pkg| match &pkg.source {
             LockedSource::Path { dir } => format!("{dir}/src"),
             LockedSource::Git { .. } => {
-                // Git deps are installed in ~/.carts/<name>/
+                // Git deps are installed in ~/.cart/<name>/
                 format!("{}/{}/src", carts_dir.display(), pkg.name)
             }
         })
