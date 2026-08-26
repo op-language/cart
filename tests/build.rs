@@ -287,7 +287,7 @@ default = "{triplet}"
         "expected lib output at {}",
         output.display()
     );
-    let carts = tmp.path().join(".carts").join("dep-lib");
+    let carts = tmp.path().join(".cart").join("dep-lib");
     assert!(
         carts.join("Cart.toml").exists(),
         "expected dep-lib cloned into carts dir at {}",

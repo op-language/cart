@@ -204,7 +204,7 @@ fn init_then_build_with_git_dep() {
 
     result.expect("build should succeed");
 
-    let carts_std = tmp.path().join(".carts").join("std");
+    let carts_std = tmp.path().join(".cart").join("std");
     assert!(
         carts_std.join("Cart.toml").exists(),
         "expected std cloned into carts dir at {}",

@@ -4,7 +4,7 @@ The Op build tool and package manager.
 
 `cart` manages Op projects the same way `cargo` manages Rust projects. It
 reads and writes the `Cart.toml` manifest, resolves dependencies from
-`~/.carts/`, invokes `opc` to compile projects, and installs libs from a
+`~/.cart/`, invokes `opc` to compile projects, and installs libs from a
 git-based registry.
 
 ## Subcommands
@@ -19,7 +19,7 @@ git-based registry.
 | `cart clean` | Remove the build output directory |
 | `cart add` | Add a lib to Cart.toml dependencies |
 | `cart doc` | Generate documentation from doc comments |
-| `cart install` | Install a lib in ~/.carts/ |
+| `cart install` | Install a lib in ~/.cart/ |
 | `cart update` | Update all dependencies to the latest version |
 
 ## License

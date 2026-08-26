@@ -64,7 +64,7 @@ pub fn build(
         .map(|pkg| match &pkg.source {
             LockedSource::Path { dir } => format!("{dir}/src"),
             LockedSource::Git { .. } => {
-                // Git deps are installed in ~/.carts/<name>/
+                // Git deps are installed in ~/.cart/<name>/
                 format!("{}/{}/src", carts_dir.display(), pkg.name)
             }
         })

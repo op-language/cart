@@ -6,7 +6,7 @@ fn make_package(name: &str, version: &str, checksum: &str) -> ResolvedPackage {
         name: name.to_string(),
         version: version.to_string(),
         source: LockedSource::Path {
-            dir: format!("~/.carts/{name}"),
+            dir: format!("~/.cart/{name}"),
         },
         checksum: checksum.to_string(),
     }
@@ -52,7 +52,7 @@ fn lockfile_is_stale_when_version_differs() {
         name: "std".to_string(),
         version: "0.2.0".to_string(),
         source: LockedSource::Path {
-            dir: "~/.carts/std".to_string(),
+            dir: "~/.cart/std".to_string(),
         },
         checksum: "abc".to_string(),
     });
@@ -80,7 +80,7 @@ fn lockfile_is_stale_when_checksum_differs() {
         name: "std".to_string(),
         version: "0.1.0".to_string(),
         source: LockedSource::Path {
-            dir: "~/.carts/std".to_string(),
+            dir: "~/.cart/std".to_string(),
         },
         checksum: "different".to_string(),
     });

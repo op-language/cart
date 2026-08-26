@@ -5,7 +5,7 @@ Version 1.0
 This document defines the technical design of the `cart` build tool and
 package manager. The `cart` tool manages Op projects the same way `cargo`
 manages Rust projects. It reads and writes the `Cart.toml` manifest,
-resolves dependencies from `~/.carts/`, invokes `opc` to compile projects,
+resolves dependencies from `~/.cart/`, invokes `opc` to compile projects,
 and installs libs from a git-based registry.
 
 This document uses the keywords **must**, **shall**, and **may** as RFC
@@ -40,7 +40,7 @@ current code is a skeleton. The implementation work follows this document.
 2. The `cart` tool must be a single binary that runs on Linux, macOS, and
    Windows.
 3. The `cart` tool must invoke the `opc` compiler to build projects.
-4. The `cart` tool must install libs in `~/.carts/` and resolve
+4. The `cart` tool must install libs in `~/.cart/` and resolve
    dependencies from that directory.
 5. The `cart` tool must read and write the `Cart.toml` manifest.
 6. The `cart` tool must write and read a `Cart.lock` lockfile for
@@ -88,7 +88,7 @@ cart binary
 The data flow for a build:
 
 ```
-Cart.toml --> resolver --> ~/.carts/<name>/ --> opc --> target/<triplet>/
+Cart.toml --> resolver --> ~/.cart/<name>/ --> opc --> target/<triplet>/
                  |
                  +-> Cart.lock
 ```
@@ -364,7 +364,7 @@ cart clean
 ```
 
 The `cart clean` command removes the `target/` directory. It does not
-remove `Cart.lock` or any files in `~/.carts/`.
+remove `Cart.lock` or any files in `~/.cart/`.
 
 ### cart add
 
@@ -373,7 +373,7 @@ cart add [OPTIONS] <name>
 ```
 
 The `cart add` command adds a lib to the `Cart.toml` `[dependencies]`
-section. It fetches and installs the lib into `~/.carts/`.
+section. It fetches and installs the lib into `~/.cart/`.
 
 Options:
 
@@ -411,9 +411,9 @@ cart install <name>
 ```
 
 The `cart install` command fetches a lib from the registry and installs
-it in `~/.carts/<name>/`. It does not modify `Cart.toml`.
+it in `~/.cart/<name>/`. It does not modify `Cart.toml`.
 
-The command clones the lib repository into `~/.carts/<name>/`. If the
+The command clones the lib repository into `~/.cart/<name>/`. If the
 directory already exists, it pulls the latest changes instead.
 
 ### cart update
@@ -424,7 +424,7 @@ cart update
 
 The `cart update` command updates all dependencies listed in `Cart.toml`
 to the latest version from the registry. For each dependency, it runs a git
-pull in `~/.carts/<name>/`. It then updates `Cart.lock` with the new
+pull in `~/.cart/<name>/`. It then updates `Cart.lock` with the new
 resolved SHA for each package.
 
 ## Cart.toml manifest
@@ -655,9 +655,9 @@ The `source` table has one of these forms:
 ### Resolution algorithm
 
 1. Read `Cart.toml` dependencies.
-2. For each dependency, locate it in `~/.carts/<name>/`. Clone it if it is
+2. For each dependency, locate it in `~/.cart/<name>/`. Clone it if it is
    missing. Use the `git` URL from `Cart.toml`.
-3. Read the lib `Cart.toml` at `~/.carts/<name>/Cart.toml`. Get the lib
+3. Read the lib `Cart.toml` at `~/.cart/<name>/Cart.toml`. Get the lib
    version from the `[package]` section.
 4. Match the version requirement from the project `Cart.toml` against the
    lib version. Use semver range matching.
@@ -675,13 +675,13 @@ that it matches the resolved graph. If the lockfile is out of date, the
 command reports error E506 and exits. The command does not update the
 lockfile in frozen mode.
 
-## ~/.carts/ layout
+## ~/.cart/ layout
 
-Each lib lives in `~/.carts/<name>/`. The directory is a git clone of the
+Each lib lives in `~/.cart/<name>/`. The directory is a git clone of the
 lib repository. It contains the lib `Cart.toml` and the `src/` directory.
 
 ```
-~/.carts/
+~/.cart/
   std/
     Cart.toml
     src/
@@ -771,10 +771,10 @@ matches version requirements, detects cycles, and builds a resolved graph.
    a. If the entry has `path`, resolve to the local path. Skip git
       operations.
    b. If the entry has `git`, clone the repository into
-      `~/.carts/<name>/` if it is absent. If the directory exists, use it
+      `~/.cart/<name>/` if it is absent. If the directory exists, use it
       as-is.
    c. If the entry has only `version`, look for the lib in
-      `~/.carts/<name>/`. If it is absent, clone from the registry default
+      `~/.cart/<name>/`. If it is absent, clone from the registry default
       git base.
 3. Read the lib `Cart.toml` at the resolved location. Get the lib
    version from `[package]` `version`.
@@ -804,17 +804,17 @@ crate parses the requirement and matches it against the lib version.
 ## Registry protocol
 
 The registry uses git only. The `cart install <name>` command clones the
-lib repository into `~/.carts/<name>/`.
+lib repository into `~/.cart/<name>/`.
 
 ### Install flow
 
 1. Determine the git URL. If the dependency entry in `Cart.toml` has a
    `git` field, use that URL. If not, form the URL from the registry
    `default-git-base` and the lib name: `<base>/<name>`.
-2. If `~/.carts/<name>/` exists, pull the latest changes with `git fetch`
+2. If `~/.cart/<name>/` exists, pull the latest changes with `git fetch`
    and `git checkout`.
-3. If `~/.carts/<name>/` does not exist, clone the repository with `git
-   clone <url> ~/.carts/<name>/`.
+3. If `~/.cart/<name>/` does not exist, clone the repository with `git
+   clone <url> ~/.cart/<name>/`.
 4. If the entry has `branch`, `tag`, or `rev`, checkout that ref after the
    clone or pull.
 5. If the git operation fails, report error E510.
@@ -823,7 +823,7 @@ lib repository into `~/.carts/<name>/`.
 
 1. Read `Cart.toml` `[dependencies]`.
 2. For each dependency with a git source, run `git fetch` and `git pull`
-   in `~/.carts/<name>/`.
+   in `~/.cart/<name>/`.
 3. Re-resolve the dependency graph.
 4. Rewrite `Cart.lock` with the new resolved SHAs.
 
@@ -959,8 +959,8 @@ A conforming `cart` implementation must:
 1. Implement all 10 subcommands: `init`, `build`, `run`, `test`, `check`,
    `clean`, `add`, `doc`, `install`, and `update`.
 2. Read and write the `Cart.toml` format as this document defines.
-3. Install libs in `~/.carts/` via git clone.
-4. Resolve dependencies from `~/.carts/` before invoking `opc`.
+3. Install libs in `~/.cart/` via git clone.
+4. Resolve dependencies from `~/.cart/` before invoking `opc`.
 5. Write and read the `Cart.lock` lockfile as this document defines.
 6. Support the `~/.cart/config.toml` config file.
 7. Support `[[run.profile]]` profiles in `Cart.toml`.

@@ -118,10 +118,10 @@ impl GlobalConfig {
             .join("config.toml")
     }
 
-    /// Get the default carts directory `~/.carts/`.
+    /// Get the default dependencies directory `~/.cart/`.
     pub fn carts_dir() -> std::path::PathBuf {
         let home = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
-        std::path::PathBuf::from(home).join(".carts")
+        std::path::PathBuf::from(home).join(".cart")
     }
 
     /// Get the std lib directory `~/.cart/std/`.

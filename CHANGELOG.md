@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 No changes.
 
+## [0.7.0]
+
+### Changed
+- Dependencies are now cloned into `~/.cart/` instead of `~/.carts/`,
+  consolidating the dependency store with the config directory
+  (`~/.cart/config.toml`) and the auto-checked-out std lib
+  (`~/.cart/std/`). This is a breaking change: existing `~/.carts/`
+  directories are no longer used and will be re-cloned into `~/.cart/`
+  on the next build.
+
 ## [0.6.0]
 
 ### Added
@@ -66,7 +76,7 @@ No changes.
 ## [0.3.0]
 
 ### Added
-- `cart build` now clones a missing git dependency into `~/.carts/`
+- `cart build` now clones a missing git dependency into `~/.cart/`
   during resolution instead of erroring with E505.
 - `cart build` now compiles lib projects with `opc` and writes the
   output to `target/<triplet>/<libname>.opb`.

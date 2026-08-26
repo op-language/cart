@@ -108,7 +108,7 @@ pub enum Command {
     },
     /// Generate documentation from doc comments.
     Doc,
-    /// Install a lib in ~/.carts/.
+    /// Install a lib in ~/.cart/.
     Install {
         name: String,
         /// Git URL for the lib.

@@ -1,4 +1,4 @@
-//! `cart install` — install a lib in ~/.carts/.
+//! `cart install` — install a lib in ~/.cart/.
 
 use crate::config::GlobalConfig;
 use crate::registry::{self, GitSource};
