@@ -6,6 +6,8 @@ fn output_extension_mapping() {
     assert_eq!(opc::output_extension("lnx"), "lnx");
     assert_eq!(opc::output_extension("raw"), "bin");
     assert_eq!(opc::output_extension("hex"), "hex");
+    assert_eq!(opc::output_extension("prg"), "prg");
+    assert_eq!(opc::output_extension("crt"), "crt");
     assert_eq!(opc::output_extension("unknown"), "bin");
 }
 

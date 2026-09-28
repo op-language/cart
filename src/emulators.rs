@@ -283,6 +283,14 @@ pub fn default_emulator_matrix() -> Vec<EmulatorEntry> {
     // Texas Instruments TI-85: TilEm2
     add!("z80-ti-85", &["tilem"], &["tilem"], &["tilem"]);
 
+    // Commander X16: x16emu
+    add!(
+        "w65c02-commander-x16",
+        &["x16emu"],
+        &["x16emu"],
+        &["x16emu"]
+    );
+
     entries
 }
 
@@ -363,7 +371,7 @@ mod tests {
     }
 
     #[test]
-    fn test_default_matrix_covers_all_29_targets() {
+    fn test_default_matrix_covers_all_supported_targets() {
         let matrix = default_emulator_matrix();
         let targets: std::collections::HashSet<_> =
             matrix.iter().map(|e| e.target.as_str()).collect();

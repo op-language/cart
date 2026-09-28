@@ -55,7 +55,7 @@ fn test_default_matrix_has_lynx_linux() {
 }
 
 #[test]
-fn test_default_matrix_covers_all_29_targets() {
+fn test_default_matrix_covers_all_supported_targets() {
     let matrix = default_emulator_matrix();
     let targets: std::collections::HashSet<_> = matrix.iter().map(|e| e.target.as_str()).collect();
     for (triplet, _, _) in cart::targets::SUPPORTED_TARGETS {
