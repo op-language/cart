@@ -1,6 +1,9 @@
 use cart::config::GlobalConfig;
-use cart::emulators::{current_os, default_emulator_matrix, is_in_path, EmulatorEntry};
+use cart::emulators::{
+    current_os, default_emulator_matrix, emulator_prepend_args, is_in_path, EmulatorEntry,
+};
 use std::fs;
+use std::path::Path;
 use std::sync::Mutex;
 use tempfile::tempdir;
 
@@ -73,6 +76,48 @@ fn test_default_matrix_covers_three_oses() {
     assert!(oses.contains("linux"));
     assert!(oses.contains("macos"));
     assert!(oses.contains("windows"));
+}
+
+#[test]
+fn test_default_matrix_has_x16_all_oses() {
+    let matrix = default_emulator_matrix();
+    for os in ["linux", "macos", "windows"] {
+        let entries: Vec<_> = matrix
+            .iter()
+            .filter(|e| e.os == os && e.target == "w65c02-commander-x16")
+            .map(|e| e.emulator.as_str())
+            .collect();
+        assert!(entries.contains(&"x16emu"), "no x16emu entry on {os}");
+    }
+}
+
+#[test]
+fn test_prepend_args_x16emu_prg_run() {
+    let args = emulator_prepend_args("w65c02-commander-x16", "x16emu", Path::new("demo.prg"));
+    assert_eq!(
+        args,
+        vec![
+            "-prg".to_string(),
+            "demo.prg".to_string(),
+            "-run".to_string()
+        ]
+    );
+}
+
+#[test]
+fn test_prepend_args_defers_to_model_args() {
+    // Other pairs keep the emulator_model_args contract: fixed model
+    // arguments only, with the ROM path appended by the caller.
+    let args = emulator_prepend_args("sm83-nintendo-gameboy", "sameboy", Path::new("game.gb"));
+    assert_eq!(args, vec!["--model".to_string(), "dmg".to_string()]);
+}
+
+#[test]
+fn test_prepend_args_other_pair_empty() {
+    assert!(
+        emulator_prepend_args("rp2A03-nintendo-nes-ntsc", "mesen2", Path::new("game.nes"),)
+            .is_empty()
+    );
 }
 
 #[test]
