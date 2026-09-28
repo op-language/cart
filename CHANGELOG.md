@@ -5,9 +5,23 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.8.0]
 
-No changes.
+### Added
+- The `w65c02-commander-x16` target (WDC W65C02S, Commander X16) in
+  `SUPPORTED_TARGETS`. `cart init` sets `format = "prg"` for it, and the
+  build writes `.prg` and `.crt` ROM files.
+- The x16emu entry in the default emulator matrix for all three OSes.
+- `emulator_prepend_args`: `cart run` launches an X16 PRG as
+  `x16emu -prg <rom> -run`. Every other emulator keeps the
+  `emulator_model_args` behavior.
+
+### Changed
+- The emulator-matrix coverage test is now
+  `test_default_matrix_covers_all_supported_targets`: it derives the
+  target list from `SUPPORTED_TARGETS` instead of a hard-coded count.
+- docs: the output-extension table and the emulator-launch argv in the
+  technical design match the current behavior.
 
 ## [0.7.0]
 
