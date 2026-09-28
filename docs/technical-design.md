@@ -228,9 +228,22 @@ The `opc` argument contract:
 | `-o <path>` | `target/<triplet>/<rom-name>.<ext>`. |
 | `<input>` | The `[[rom]]` `path` field. |
 
-The output extension depends on the target output format. For `ines` the
-extension is `.nes`. For `lnx` the extension is `.lnx`. For `raw` the
-extension is `.bin`. For `hex` the extension is `.hex`.
+The output extension depends on the target output format:
+
+| Format | Extension |
+|--------|-----------|
+| `ines` | `.nes` |
+| `lnx` | `.lnx` |
+| `gb` | `.gb` |
+| `sega` | `.md` |
+| `snes` | `.sfc` |
+| `sms` | `.sms` |
+| `a78` | `.a78` |
+| `prg` | `.prg` |
+| `crt` | `.crt` |
+| `raw` | `.bin` |
+| `hex` | `.hex` |
+| any other | `.bin` |
 
 If the user passes `--frozen` and `Cart.lock` is out of date, the command
 reports error E506 and exits.
@@ -269,9 +282,16 @@ The `[[run.profile]]` section has these fields:
 The command finds the emulator executable on `PATH`. If the emulator is
 absent, the command reports error E501.
 
-The command builds the argv from the profile `args` and appends the ROM
-path. It spawns the emulator with `std::process::Command`. It inherits the
-stdio. It forwards the exit code.
+The command builds the argv from the emulator-specific launch arguments,
+the profile `args`, and the ROM path. The launch arguments come from the
+target triplet and the emulator name. SameBoy takes a model flag before
+the ROM path: `--model dmg` for the Game Boy triplet, `--model cgb` for
+the Game Boy Color triplet. x16emu loads a PRG with its `-prg` option and
+follows the PRG path with its `-run` option, so the ROM path sits between
+the two flags. For every other emulator the command appends the ROM path
+after the profile `args`. It spawns the emulator with
+`std::process::Command`. It inherits the stdio. It does not wait for the
+emulator to exit.
 
 ### cart test
 
@@ -843,9 +863,14 @@ The `cart run` and `cart test` commands launch an emulator to run a ROM.
 3. If the profile has a `target` field, override the target triplet.
 4. Find the emulator executable on `PATH` with the `which` lookup.
 5. If the emulator is absent, report error E501.
-6. Build the argv. Start with the profile `args`. Append the ROM path.
+6. Build the argv. Start with the emulator-specific launch arguments
+   that the target triplet and the emulator name determine. SameBoy
+   takes a model flag before the ROM path. x16emu takes the ROM path
+   inside its `-prg`/`-run` option pair. Then the profile `args`.
+   Append the ROM path unless the launch arguments already embed it.
 7. Spawn the emulator with `std::process::Command`. Inherit the stdio.
-8. Wait for the emulator to exit. Forward the exit code.
+8. Return without waiting for the emulator to exit. The emulator
+   process outlives the `cart run` command.
 
 ### Test flow
 
@@ -853,9 +878,9 @@ The `cart run` and `cart test` commands launch an emulator to run a ROM.
 2. Select the test profile. The `[test]` `profile` field names the
    profile. The default name is `test`.
 3. Find the emulator on `PATH`.
-4. Build the argv. Start with the profile `args`. Append the ROM path.
-   Append `--dump <path>` where `<path>` is a temporary file for the
-   memory dump.
+4. Build the argv. Start with the emulator model arguments. Then the
+   profile `args`. Append the ROM path. Append `--dump <path>` where
+   `<path>` is a temporary file for the memory dump.
 5. Spawn the emulator. Wait for it to exit.
 6. Read the memory dump file. The file is a flat binary.
 7. Read the byte at the sentinel `address` for the target machine.
