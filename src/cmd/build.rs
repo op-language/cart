@@ -1,6 +1,7 @@
 //! `cart build` — compile the project and write the ROM image.
 
 use crate::config::GlobalConfig;
+use crate::giterror;
 use crate::lockfile::{CartLock, LockedSource};
 use crate::manifest::CartManifest;
 use crate::opc::{self, OpcArgs, OpcStage};
@@ -30,9 +31,17 @@ pub fn build(
         if let Some(parent) = std_dir.parent() {
             std::fs::create_dir_all(parent)?;
         }
-        git2::build::RepoBuilder::new()
-            .clone("https://github.com/op-language/std", &std_dir)
-            .map_err(|e| anyhow::anyhow!("E510: failed to clone std lib: {e}"))?;
+        let std_url = "https://github.com/op-language/std";
+        if let Err(e) = git2::build::RepoBuilder::new().clone(std_url, &std_dir) {
+            // A failed clone can leave an empty directory. Remove it so the
+            // next attempt and a manual git clone start clean.
+            let _ = std::fs::remove_dir(&std_dir);
+            let hint = giterror::hint_lines(&e, std_url, &std_dir);
+            let dest = std_dir.display().to_string();
+            return Err(anyhow::anyhow!(
+                "E510: failed to clone std lib from {std_url} into {dest}: {e}{hint}"
+            ));
+        }
     }
 
     let graph = resolver::resolve(&manifest, &carts_dir, config.default_git_base())?;

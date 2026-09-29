@@ -5,6 +5,21 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.1]
+
+### Fixed
+- HTTPS support in the built binary. The `git2` dependency now enables the
+  `https`, `vendored-libgit2`, and `vendored-openssl` features. The bundled
+  libgit2 gets an OpenSSL TLS backend, and `cart build` clones the std lib
+  and dependencies over HTTPS again. This fixes the `there is no TLS stream
+  available` error. ssh URLs stay unsupported.
+- The `E510` messages for failed clones and fetches now name the URL, the
+  destination, and a fix hint. A missing-TLS error tells the user to rebuild
+  and reinstall `cart` and shows a manual `git clone` workaround. Clones
+  with certificate, credential, and DNS failures get their own hints.
+- A failed clone now removes its empty destination directory. The next
+  attempt and a manual `git clone` start clean.
+
 ## [0.8.0]
 
 ### Added

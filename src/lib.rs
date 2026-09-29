@@ -8,6 +8,7 @@ pub mod cmd;
 pub mod config;
 pub mod diagnostics;
 pub mod emulators;
+pub mod giterror;
 pub mod lockfile;
 pub mod manifest;
 pub mod opc;

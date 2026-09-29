@@ -4,6 +4,7 @@
 //! repository into `~/.cart/<name>/`. The `cart update` command pulls the
 //! latest changes.
 
+use crate::giterror;
 use std::path::{Path, PathBuf};
 
 /// The source specification for a lib.
@@ -98,9 +99,16 @@ fn clone_repo(dest: &Path, source: &GitSource) -> anyhow::Result<InstallResult> 
     if let Some(branch) = &source.branch {
         builder.branch(branch);
     }
-    builder
-        .clone(&source.url, dest)
-        .map_err(|e| anyhow::anyhow!("E510: git clone '{}' failed: {e}", source.url))?;
+    if let Err(e) = builder.clone(&source.url, dest) {
+        // A failed clone can leave an empty directory. Remove it so the
+        // next attempt and a manual git clone start clean.
+        let _ = std::fs::remove_dir(dest);
+        let hint = giterror::hint_lines(&e, &source.url, dest);
+        return Err(anyhow::anyhow!(
+            "E510: git clone '{}' failed: {e}{hint}",
+            source.url
+        ));
+    }
     let repo = git2::Repository::open(dest)
         .map_err(|e| anyhow::anyhow!("E510: failed to open repo: {e}"))?;
     if let Some(tag) = &source.tag {
@@ -124,7 +132,11 @@ fn update_repo(dest: &Path, source: &GitSource) -> anyhow::Result<InstallResult>
         .map_err(|e| anyhow::anyhow!("E510: failed to find origin remote: {e}"))?;
     remote
         .fetch(&["refs/heads/*:refs/heads/*"], None, None)
-        .map_err(|e| anyhow::anyhow!("E510: git fetch failed: {e}"))?;
+        .map_err(|e| {
+            let remote_url = remote.url().unwrap_or("unknown remote");
+            let hint = giterror::hint_lines(&e, remote_url, dest);
+            anyhow::anyhow!("E510: git fetch from '{}' failed: {e}{hint}", remote_url)
+        })?;
     if let Some(branch) = &source.branch {
         checkout_branch(&repo, branch)?;
     } else if let Some(tag) = &source.tag {
