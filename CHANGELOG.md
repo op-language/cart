@@ -5,9 +5,38 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.8.1]
 
-No changes.
+### Fixed
+- HTTPS support in the built binary. The `git2` dependency now enables the
+  `https`, `vendored-libgit2`, and `vendored-openssl` features. The bundled
+  libgit2 gets an OpenSSL TLS backend, and `cart build` clones the std lib
+  and dependencies over HTTPS again. This fixes the `there is no TLS stream
+  available` error. ssh URLs stay unsupported.
+- The `E510` messages for failed clones and fetches now name the URL, the
+  destination, and a fix hint. A missing-TLS error tells the user to rebuild
+  and reinstall `cart` and shows a manual `git clone` workaround. Clones
+  with certificate, credential, and DNS failures get their own hints.
+- A failed clone now removes its empty destination directory. The next
+  attempt and a manual `git clone` start clean.
+
+## [0.8.0]
+
+### Added
+- The `w65c02-commander-x16` target (WDC W65C02S, Commander X16) in
+  `SUPPORTED_TARGETS`. `cart init` sets `format = "prg"` for it, and the
+  build writes `.prg` and `.crt` ROM files.
+- The x16emu entry in the default emulator matrix for all three OSes.
+- `emulator_prepend_args`: `cart run` launches an X16 PRG as
+  `x16emu -prg <rom> -run`. Every other emulator keeps the
+  `emulator_model_args` behavior.
+
+### Changed
+- The emulator-matrix coverage test is now
+  `test_default_matrix_covers_all_supported_targets`: it derives the
+  target list from `SUPPORTED_TARGETS` instead of a hard-coded count.
+- docs: the output-extension table and the emulator-launch argv in the
+  technical design match the current behavior.
 
 ## [0.7.0]
 

@@ -321,3 +321,32 @@ fn init_with_empty_run_profile_errors() {
         "expected E502 for empty emulator, got: {err}"
     );
 }
+
+#[test]
+fn init_x16_project_sets_prg_format() {
+    let _lock = INIT_LOCK.lock().unwrap();
+    let tmp = tempdir().expect("tempdir");
+    let project_name = "x16game";
+    let project_path = tmp.path().join(project_name);
+
+    let old_dir = std::env::current_dir().expect("cwd");
+    std::env::set_current_dir(tmp.path()).expect("cd");
+    cmd::init::init(
+        project_name,
+        false,
+        Some("w65c02-commander-x16".to_string()),
+        None,
+    )
+    .expect("init");
+    let _ = std::env::set_current_dir(&old_dir);
+
+    let manifest_text = fs::read_to_string(project_path.join("Cart.toml")).expect("read Cart.toml");
+    assert!(
+        manifest_text.contains("target = \"w65c02-commander-x16\""),
+        "should set the Commander X16 target"
+    );
+    assert!(
+        manifest_text.contains("format = \"prg\""),
+        "should default to the prg format"
+    );
+}

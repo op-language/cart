@@ -4,6 +4,7 @@
 //! detect the operating system and test if a binary is on the PATH.
 
 use serde::{Deserialize, Serialize};
+use std::path::Path;
 
 /// A single entry in the emulator matrix.
 ///
@@ -283,6 +284,14 @@ pub fn default_emulator_matrix() -> Vec<EmulatorEntry> {
     // Texas Instruments TI-85: TilEm2
     add!("z80-ti-85", &["tilem"], &["tilem"], &["tilem"]);
 
+    // Commander X16: x16emu
+    add!(
+        "w65c02-commander-x16",
+        &["x16emu"],
+        &["x16emu"],
+        &["x16emu"]
+    );
+
     entries
 }
 
@@ -308,6 +317,29 @@ pub fn emulator_model_args(triplet: &str, emulator: &str) -> Vec<String> {
         }
         _ => Vec::new(),
     }
+}
+
+/// Return the fixed arguments that `cart run` places before the run
+/// profile's own arguments when launching a ROM.
+///
+/// SameBoy and the other model-flag emulators keep the
+/// `emulator_model_args` contract: the returned arguments precede the
+/// ROM path, which the caller appends itself. x16emu is the exception:
+/// its `-run` flag is an option to `-prg` and must follow the PRG path,
+/// so the returned arguments embed the ROM path between the two flags
+/// and the caller must not append it again.
+pub fn emulator_prepend_args(triplet: &str, emulator: &str, rom_path: &Path) -> Vec<String> {
+    // Compare against the binary name (last path component) so that
+    // absolute or relative paths to the emulator also match.
+    let emu = emulator.rsplit(['/', '\\']).next().unwrap_or(emulator);
+    if triplet == "w65c02-commander-x16" && emu == "x16emu" {
+        return vec![
+            "-prg".to_string(),
+            rom_path.to_string_lossy().into_owned(),
+            "-run".to_string(),
+        ];
+    }
+    emulator_model_args(triplet, emulator)
 }
 
 #[cfg(test)]
@@ -363,7 +395,7 @@ mod tests {
     }
 
     #[test]
-    fn test_default_matrix_covers_all_29_targets() {
+    fn test_default_matrix_covers_all_supported_targets() {
         let matrix = default_emulator_matrix();
         let targets: std::collections::HashSet<_> =
             matrix.iter().map(|e| e.target.as_str()).collect();
@@ -428,5 +460,69 @@ mod tests {
     #[test]
     fn test_model_args_other_target_empty() {
         assert!(emulator_model_args("rp2A03-nintendo-nes-ntsc", "sameboy").is_empty());
+    }
+
+    #[test]
+    fn test_default_matrix_has_x16_all_oses() {
+        let matrix = default_emulator_matrix();
+        for os in ["linux", "macos", "windows"] {
+            let entries: Vec<_> = matrix
+                .iter()
+                .filter(|e| e.os == os && e.target == "w65c02-commander-x16")
+                .map(|e| e.emulator.as_str())
+                .collect();
+            assert!(entries.contains(&"x16emu"), "no x16emu entry on {os}");
+        }
+    }
+
+    #[test]
+    fn test_prepend_args_x16emu_prg_run() {
+        let args = emulator_prepend_args(
+            "w65c02-commander-x16",
+            "x16emu",
+            std::path::Path::new("demo.prg"),
+        );
+        assert_eq!(
+            args,
+            vec![
+                "-prg".to_string(),
+                "demo.prg".to_string(),
+                "-run".to_string()
+            ]
+        );
+    }
+
+    #[test]
+    fn test_prepend_args_x16emu_path() {
+        // Absolute/relative paths to the emulator should also match.
+        let args = emulator_prepend_args(
+            "w65c02-commander-x16",
+            "/opt/x16/x16emu",
+            std::path::Path::new("demo.prg"),
+        );
+        assert_eq!(args[0], "-prg".to_string());
+        assert_eq!(args[2], "-run".to_string());
+    }
+
+    #[test]
+    fn test_prepend_args_defers_to_model_args() {
+        // Other pairs keep the emulator_model_args contract: fixed model
+        // arguments only, with the ROM path appended by the caller.
+        let args = emulator_prepend_args(
+            "sm83-nintendo-gameboy",
+            "sameboy",
+            std::path::Path::new("game.gb"),
+        );
+        assert_eq!(args, vec!["--model".to_string(), "dmg".to_string()]);
+    }
+
+    #[test]
+    fn test_prepend_args_other_pair_empty() {
+        assert!(emulator_prepend_args(
+            "rp2A03-nintendo-nes-ntsc",
+            "mesen2",
+            std::path::Path::new("game.nes"),
+        )
+        .is_empty());
     }
 }

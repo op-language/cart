@@ -98,6 +98,8 @@ pub fn output_extension(format: &str) -> &str {
         "snes" => "sfc",
         "sms" => "sms",
         "a78" => "a78",
+        "prg" => "prg",
+        "crt" => "crt",
         "raw" => "bin",
         "hex" => "hex",
         _ => "bin",

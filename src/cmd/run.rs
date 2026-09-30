@@ -75,16 +75,24 @@ pub fn run(
     eprintln!("Running {} in {}...", rom.name, run_profile.emulator);
 
     let mut cmd = Command::new(&emulator);
-    // Auto-determine emulator-specific model arguments (e.g. SameBoy's
+    // Auto-determine emulator-specific launch arguments (e.g. SameBoy's
     // `--model dmg` / `--model cgb`) from the target triplet and the
-    // emulator name.
-    for arg in crate::emulators::emulator_model_args(&rom_target, &run_profile.emulator) {
+    // emulator name. x16emu takes the ROM path inside its `-prg`/`-run`
+    // option pair, so the returned arguments may already embed it.
+    let launch_args =
+        crate::emulators::emulator_prepend_args(&rom_target, &run_profile.emulator, &rom_path);
+    let rom_placed = launch_args
+        .iter()
+        .any(|arg| Path::new(arg) == rom_path.as_path());
+    for arg in launch_args {
         cmd.arg(arg);
     }
     for arg in &run_profile.args {
         cmd.arg(arg);
     }
-    cmd.arg(&rom_path);
+    if !rom_placed {
+        cmd.arg(&rom_path);
+    }
 
     cmd.spawn()
         .map_err(|e| anyhow::anyhow!("E501: failed to launch emulator: {e}"))?;

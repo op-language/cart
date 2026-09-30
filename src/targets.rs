@@ -45,4 +45,5 @@ pub const SUPPORTED_TARGETS: &[(&str, &str, &str)] = &[
     ("z80-sinclair-zx81", "Zilog Z80", "Sinclair ZX81"),
     ("z80-sinclair-spectrum", "Zilog Z80", "Sinclair Spectrum"),
     ("z80-ti-85", "Zilog Z80", "Texas Instruments TI-85"),
+    ("w65c02-commander-x16", "WDC W65C02S", "Commander X16"),
 ];

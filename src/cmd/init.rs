@@ -174,7 +174,7 @@ fn determine_run_profile(
     // Ask the user if they want a default run profile.
     let selection = Select::new()
         .with_prompt("Add a default run profile?")
-        .items(&["Yes", "No"])
+        .items(["Yes", "No"])
         .default(0)
         .interact()?;
 
@@ -233,9 +233,9 @@ fn default_format_for(target: &str) -> Option<String> {
         Some("ines".to_string())
     } else if target.contains("lynx") {
         Some("lnx".to_string())
-    } else if target.contains("gameboy-color") {
-        Some("gb".to_string())
     } else if target.contains("gameboy") {
+        // The gameboy-color triplet also contains "gameboy"; both use the
+        // gb format.
         Some("gb".to_string())
     } else if target.contains("snes") {
         Some("snes".to_string())
@@ -248,6 +248,8 @@ fn default_format_for(target: &str) -> Option<String> {
         Some("sms".to_string())
     } else if target.contains("atari-7800") {
         Some("a78".to_string())
+    } else if target.contains("commander-x16") {
+        Some("prg".to_string())
     } else {
         None
     }
