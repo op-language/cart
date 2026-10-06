@@ -107,6 +107,39 @@ pub struct TestConfig {
     pub profile: Option<String>,
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub sentinel: BTreeMap<String, Sentinel>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub demu: Option<TestDemu>,
+}
+
+/// The optional `[test.demu]` section.
+///
+/// It is present only when the project runs its tests in the native demu
+/// mode. The named checks file is the demu-native checks document
+/// (memory-region equality, trigger-hit assertions, screenshot hash);
+/// cart passes it through as `--checks <file>` and does not read it.
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
+pub struct TestDemu {
+    /// Path to the demu checks file, relative to the manifest.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub checks: Option<String>,
+    /// The run-frame budget in display frames. cart test pipes one
+    /// `run-frame <N>` command into demu's stdin before the session
+    /// ends, so the test ROM runs before the sentinel byte is
+    /// evaluated. The [`DEFAULT_DEMU_TEST_FRAMES`] value applies when
+    /// the field is absent.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub frames: Option<u64>,
+}
+
+/// The run-frame budget that the native demu test mode applies when the
+/// `[test.demu]` section carries no `frames` field.
+pub const DEFAULT_DEMU_TEST_FRAMES: u64 = 120;
+
+impl TestDemu {
+    /// Get the run-frame budget in display frames.
+    pub fn frames(&self) -> u64 {
+        self.frames.unwrap_or(DEFAULT_DEMU_TEST_FRAMES)
+    }
 }
 
 /// A sentinel definition for a machine in `[test.sentinel.<machine>]`.

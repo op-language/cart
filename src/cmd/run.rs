@@ -55,6 +55,7 @@ pub fn run(
             Vec::new(),
             None,
             false,
+            false,
         )?;
     }
 

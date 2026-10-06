@@ -126,6 +126,7 @@ fn build_lib_invokes_opc() {
         Vec::new(),
         None,
         false,
+        false,
     );
 
     std::env::set_var("PATH", &old_path);
@@ -165,6 +166,7 @@ fn build_rom_invokes_opc() {
         false,
         Vec::new(),
         None,
+        false,
         false,
     );
 
@@ -207,6 +209,7 @@ edition = "1"
         false,
         Vec::new(),
         None,
+        false,
         false,
     );
 
@@ -273,6 +276,7 @@ default = "{triplet}"
         false,
         Vec::new(),
         None,
+        false,
         false,
     );
 

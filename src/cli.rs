@@ -1,7 +1,7 @@
 //! Command-line interface for `cart`.
 //!
-//! Implements the subcommands: `init`, `build`, `run`, `test`, `check`,
-//! `clean`, `add`, `doc`, `install`, and `update`.
+//! Implements the subcommands: `init`, `build`, `run`, `debug`, `test`,
+//! `check`, `clean`, `add`, `doc`, `install`, and `update`.
 
 use anyhow::Result;
 use clap::{ArgAction, Parser, Subcommand};
@@ -81,6 +81,12 @@ pub enum Command {
         #[arg(long)]
         profile: Option<String>,
     },
+    /// Launch the demu socket server for an LLM debug session.
+    Debug {
+        /// Override the target triplet.
+        #[arg(long)]
+        target: Option<String>,
+    },
     /// Run the project's test suite.
     Test {
         #[arg(long)]
@@ -147,13 +153,23 @@ pub fn run() -> Result<()> {
             features,
             format,
             args.frozen,
+            false,
         ),
         Command::Run {
             target,
             release,
             profile,
         } => cmd::run::run(&manifest_path, target, release, profile),
-        Command::Test { target } => cmd::test::test(&manifest_path, target),
+        Command::Debug { target } => cmd::debug::debug(&manifest_path, target),
+        Command::Test { target } => {
+            let summary = cmd::test::test(&manifest_path, target)?;
+            // A test failure exits 2, distinct from the anyhow exit 1
+            // of command errors.
+            if summary.failed > 0 {
+                std::process::exit(2);
+            }
+            Ok(())
+        }
         Command::Check { target } => cmd::check::check(&manifest_path, target),
         Command::Clean => cmd::clean::clean(&manifest_path),
         Command::Add {

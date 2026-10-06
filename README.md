@@ -14,6 +14,7 @@ git-based registry.
 | `cart init` | Create a new Op project |
 | `cart build` | Compile the project and write the ROM image |
 | `cart run` | Build the project and launch the ROM in an emulator |
+| `cart debug` | Launch the demu socket server for an LLM debug session |
 | `cart test` | Run the project test suite |
 | `cart check` | Run the lexer and parser without code generation |
 | `cart clean` | Remove the build output directory |

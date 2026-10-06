@@ -288,10 +288,52 @@ target triplet and the emulator name. SameBoy takes a model flag before
 the ROM path: `--model dmg` for the Game Boy triplet, `--model cgb` for
 the Game Boy Color triplet. x16emu loads a PRG with its `-prg` option and
 follows the PRG path with its `-run` option, so the ROM path sits between
-the two flags. For every other emulator the command appends the ROM path
-after the profile `args`. It spawns the emulator with
+the two flags. demu selects the machine with `--config <triplet>` for
+every target triplet. For every other emulator the command appends the
+ROM path after the profile `args`. It spawns the emulator with
 `std::process::Command`. It inherits the stdio. It does not wait for the
 emulator to exit.
+
+### cart debug
+
+```
+cart debug [OPTIONS]
+```
+
+The `cart debug` command builds the project, starts the demu socket
+server, and prints the socket path. An LLM session or the `demu-debug`
+skill connects to the socket and drives the JSON-lines protocol.
+
+Options:
+
+| Flag | Description |
+|------|-------------|
+| `--target <triplet>` | Override the target triplet. |
+
+The command runs these steps:
+
+1. Build the ROM. The build passes `--output-stages` to `opc`, so the
+   `.linked.opl` symbol table lands next to the ROM file.
+2. Check that `demu` is on `PATH`. If it is absent, report error E501.
+3. Print the socket path to stdout: `demu listening on <path>`.
+4. Start demu with this argv:
+
+```
+demu --config <triplet> --symbols <rom>.linked.opl --serve <path> <rom>
+```
+
+   The socket path is `target/<triplet>/debug.demu-sock` under the
+   project directory. The ROM path is positional. A client that reads
+   the output early can connect in the short window before demu binds
+   the socket; the connect attempt fails with a file error and a retry
+   succeeds.
+5. Wait until demu exits. demu serves one client at a time and stays
+   alive across client disconnects. A user interrupt tears down demu and
+   `cart debug` together. A demu exit status other than 0 is a failed
+   session, and the command reports error E501.
+
+demu is not part of the default emulator matrix. A project opts in with
+`[[run.profile]] emulator = "demu"`.
 
 ### cart test
 
@@ -316,8 +358,36 @@ names.
 
 The test ROM writes a sentinel byte to a fixed memory address when the
 test passes. The `[test]` table in `Cart.toml` maps each machine name to a
-sentinel address and a pass value. The command reads the memory dump from
-the emulator and checks the sentinel byte.
+sentinel address and a pass value.
+
+When the test profile names demu, the command runs the native demu mode.
+The build also passes `--output-stages` to `opc`, so the `.linked.opl`
+symbol table lands next to the test ROM. The command starts demu with
+this argv:
+
+```
+demu --config <triplet> [args] <rom> --dump <path> [--sentinel <addr>:<value>]
+     --symbols <rom>.linked.opl [--checks <file>]
+```
+
+The sentinel pair appears only when the machine name carries a
+`[test.sentinel.<machine>]` entry.
+
+demu boots and parks, so the pipe carries one `run-frame <N>` command
+into demu's stdin, where `<N>` is the `[test.demu]` `frames` field. The
+default budget is 120 display frames when the section or the field is
+absent. cart closes the pipe after the command, so the session ends,
+demu writes the memory dump, compares the sentinel byte itself, and sets
+the exit code: 0 for a pass, 1 for a sentinel miss, 2 for a usage,
+config, or I/O error. The command decides pass and fail from the exit
+code. It does not read the dump file itself. The demu dump image carries
+the byte at memory address `A` at file offset `A`; the demu machine
+reads one byte per address only below `0x10000`, so a sentinel address
+at or above `0x10000` compares as 0. Keep sentinel addresses at or below
+`0xFFFF`.
+
+When the profile names any other emulator, the command keeps the
+spawn-and-read contract below unchanged.
 
 `[test]` table fields:
 
@@ -325,6 +395,14 @@ the emulator and checks the sentinel byte.
 |-------|------|----------|-------------|
 | `profile` | string | no | Run profile name for the test emulator. Default: `test`. |
 | `sentinel` | table | yes | Map from machine name to sentinel config. |
+| `demu` | table | no | The native demu test settings. |
+
+`[test.demu]` fields:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `checks` | string | no | Path to the demu checks file, relative to the manifest. The command forwards it as `--checks <file>` and does not read it. |
+| `frames` | integer | no | The run-frame budget in display frames. Default: `120`. |
 
 `[test.sentinel.<machine>]` fields:
 
@@ -337,7 +415,11 @@ Example:
 
 ```toml
 [test]
-profile = "test"
+profile = "demu"
+
+[test.demu]
+checks = "tests/checks.toml"
+frames = 300
 
 [test.sentinel.nes]
 address = 0x6000
@@ -348,11 +430,11 @@ address = 0xFC00
 pass_value = 0x01
 ```
 
-The command reads the memory dump from the emulator. The emulator writes a
-flat binary file to a path that the command passes as a `--dump <path>`
-argument. The command reads the byte at the sentinel `address`. It compares
-the byte to the `pass_value`. If they match, the test passes. If they do
-not match, the test fails.
+The dump-reading contract for the non-demu emulators: the emulator writes
+a flat binary file to a path that the command passes as a `--dump <path>`
+argument. The command reads the byte at the sentinel `address`. It
+compares the byte to the `pass_value`. If they match, the test passes. If
+they do not match, the test fails.
 
 The command reports pass or fail for each test file. It prints a summary at
 the end. If any test fails, the command exits with status code 2.
@@ -496,8 +578,19 @@ name = "debug"
 emulator = "mesen"
 args = ["--rom", "--debugger"]
 
+[[run.profile]]
+name = "test"
+emulator = "demu"
+
+[[run.profile]]
+name = "demu"
+emulator = "demu"
+
 [test]
 profile = "test"
+
+[test.demu]
+checks = "tests/checks.toml"
 
 [test.sentinel.nes]
 address = 0x6000
@@ -610,6 +703,11 @@ multiple profiles.
 The profile with the name `default` is the default for `cart run`. The
 `--profile` flag selects a profile by name.
 
+A profile with `emulator = "demu"` runs the Op cart in demu. `cart run`
+adds `--config <triplet>` and the ROM path. `cart test` runs the native
+demu mode described in the `cart test` section. `cart debug` needs no
+profile; it starts demu and its socket server itself.
+
 ### [test]
 
 Configures the test harness for `cart test`.
@@ -618,6 +716,7 @@ Configures the test harness for `cart test`.
 |-------|------|----------|-------------|
 | `profile` | string | no | Run profile name for the test emulator. Default: `test`. |
 | `sentinel` | table | yes | Map from machine name to sentinel config. |
+| `demu` | table | no | The native demu test settings: the optional `checks` path and the optional `frames` run-frame budget, described in the `cart test` section. |
 
 Each key in the `sentinel` table is a machine name. The value is a table
 with `address` and `pass_value` fields.
@@ -888,6 +987,14 @@ The `cart run` and `cart test` commands launch an emulator to run a ROM.
    If they do not match, the test fails.
 9. Report the result for each test file. Print a summary.
 10. If any test fails, exit with status code 2.
+
+When the profile names demu, step 4 also requests the opc stage output
+and appends `--sentinel`, `--symbols`, and, when `[test.demu]` names a
+checks file, `--checks`. The pipe carries one `run-frame <N>` command
+from the `[test.demu]` `frames` field, with 120 as the default budget,
+after which the pipe closes and the session ends. demu compares the
+sentinel byte itself and sets the exit code, so step 6 to step 8
+collapse into one rule: the demu exit code decides the result.
 
 ## cart doc Markdown generation
 

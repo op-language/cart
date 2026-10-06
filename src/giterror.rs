@@ -11,9 +11,7 @@ use std::path::Path;
 pub fn clone_error_hint(err: &git2::Error, url: &str, dest: &Path) -> Option<String> {
     // libgit2 reports a missing TLS backend with this fixed message and
     // no dedicated error code, so the dispatch has to match the message.
-    if err.class() == git2::ErrorClass::Ssl
-        && err.message() == "there is no TLS stream available"
-    {
+    if err.class() == git2::ErrorClass::Ssl && err.message() == "there is no TLS stream available" {
         return Some(format!(
             "This cart binary was built without HTTPS support. Rebuild and \
              reinstall cart from source. System git workaround for this URL: \
@@ -35,9 +33,7 @@ pub fn clone_error_hint(err: &git2::Error, url: &str, dest: &Path) -> Option<Str
                 .to_string(),
         );
     }
-    if err.class() == git2::ErrorClass::Net
-        && err.message().contains("failed to resolve address")
-    {
+    if err.class() == git2::ErrorClass::Net && err.message().contains("failed to resolve address") {
         return Some(
             "cart could not resolve the server address. Check the network \
              connection and the server address."
@@ -83,9 +79,7 @@ mod tests {
         .expect("TLS-missing errors need a hint");
         assert!(hint.contains("without HTTPS support"));
         assert!(hint.contains("Rebuild and reinstall cart from source."));
-        assert!(hint.contains(
-            "git clone https://github.com/op-language/std /home/u/.cart/std"
-        ));
+        assert!(hint.contains("git clone https://github.com/op-language/std /home/u/.cart/std"));
     }
 
     #[test]

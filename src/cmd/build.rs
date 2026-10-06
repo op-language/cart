@@ -9,6 +9,10 @@ use crate::resolver;
 use anyhow::Result;
 use std::path::{Path, PathBuf};
 
+// The build handler mirrors the `cart build` CLI flags plus the
+// per-command option switches; a parameter struct would not add type
+// safety, so the long parameter list stays.
+#[allow(clippy::too_many_arguments)]
 pub fn build(
     manifest_path: &Path,
     target: Option<String>,
@@ -17,6 +21,7 @@ pub fn build(
     features: Vec<String>,
     format: Option<String>,
     frozen: bool,
+    output_stages: bool,
 ) -> Result<()> {
     let manifest = CartManifest::load(manifest_path)?;
     let config = GlobalConfig::load_or_create();
@@ -140,6 +145,7 @@ pub fn build(
                 output: Some(output.clone()),
                 stage: OpcStage::Full,
                 include: include_paths.clone(),
+                output_stages,
             };
 
             opc::invoke(&args)?;
@@ -196,6 +202,7 @@ pub fn build(
             output: Some(output.clone()),
             stage: OpcStage::Full,
             include: include_paths.clone(),
+            output_stages,
         };
 
         opc::invoke(&args)?;
@@ -230,4 +237,11 @@ pub fn rom_output_path(
         .join("target")
         .join(target)
         .join(format!("{rom_name}.{ext}"))
+}
+
+/// Get the path of the linked symbol table that opc writes next to a
+/// ROM output when `--output-stages` is set. `foo.<ext>` becomes
+/// `foo.linked.opl`.
+pub fn symbol_output_path(rom_path: &Path) -> PathBuf {
+    rom_path.with_extension("linked.opl")
 }

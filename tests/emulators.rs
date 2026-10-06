@@ -121,6 +121,44 @@ fn test_prepend_args_other_pair_empty() {
 }
 
 #[test]
+fn test_model_args_demu_config_flag() {
+    let args = cart::emulators::emulator_model_args("rp2A03-nintendo-nes-ntsc", "demu");
+    assert_eq!(
+        args,
+        vec![
+            "--config".to_string(),
+            "rp2A03-nintendo-nes-ntsc".to_string()
+        ]
+    );
+}
+
+#[test]
+fn test_model_args_demu_every_target() {
+    // Every supported target selects its bundled config the same way.
+    for (triplet, _, _) in cart::targets::SUPPORTED_TARGETS {
+        let args = cart::emulators::emulator_model_args(triplet, "demu");
+        assert_eq!(
+            args,
+            vec!["--config".to_string(), triplet.to_string()],
+            "demu model args for {triplet}"
+        );
+    }
+}
+
+#[test]
+fn test_sentinel_args_format() {
+    use cart::emulators::demu_sentinel_args;
+    assert_eq!(
+        demu_sentinel_args(0x6000, 0xFF),
+        vec!["--sentinel".to_string(), "0x6000:0xff".to_string()]
+    );
+    assert_eq!(
+        demu_sentinel_args(0, 0),
+        vec!["--sentinel".to_string(), "0x0:0x0".to_string()]
+    );
+}
+
+#[test]
 fn test_emulators_for_returns_correct_list() {
     let config = GlobalConfig::default_with_emulators();
     let emus = config.emulators_for("linux", "sm83-nintendo-gameboy");

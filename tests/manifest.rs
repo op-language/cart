@@ -154,6 +154,104 @@ pass_value = 0xFF
 }
 
 #[test]
+fn parse_test_config_without_demu_section() {
+    let text = r#"
+[package]
+name = "test"
+version = "0.1.0"
+
+[[rom]]
+name = "test"
+target = "rp2A03-nintendo-nes-ntsc"
+
+[test]
+profile = "test"
+
+[test.sentinel.nes]
+address = 0x6000
+pass_value = 0xFF
+"#;
+    let manifest = CartManifest::from_toml(text).expect("parse");
+    let test = manifest.test.as_ref().expect("test config");
+    assert!(test.demu.is_none(), "no [test.demu] section");
+}
+
+#[test]
+fn parse_test_demu_checks_section() {
+    let text = r#"
+[package]
+name = "test"
+version = "0.1.0"
+
+[[rom]]
+name = "test"
+target = "sm83-nintendo-gameboy"
+
+[test]
+profile = "demu"
+
+[test.demu]
+checks = "tests/checks.toml"
+frames = 30
+
+[test.sentinel.gb]
+address = 0xA000
+pass_value = 0x64
+"#;
+    let manifest = CartManifest::from_toml(text).expect("parse");
+    let test = manifest.test.as_ref().expect("test config");
+    let demu = test.demu.as_ref().expect("[test.demu] section");
+    assert_eq!(demu.checks.as_deref(), Some("tests/checks.toml"));
+    assert_eq!(demu.frames, Some(30), "the manifest frame budget");
+    assert_eq!(demu.frames(), 30);
+    assert_eq!(test.profile.as_deref(), Some("demu"));
+
+    // Round trip: the section serializes back.
+    let text = manifest.to_toml().expect("serialize");
+    let reparsed = CartManifest::from_toml(&text).expect("reparse");
+    assert_eq!(
+        reparsed.test.as_ref().unwrap().demu,
+        test.demu,
+        "the [test.demu] section survives the round trip"
+    );
+}
+
+#[test]
+fn test_demu_frames_default() {
+    use cart::manifest::DEFAULT_DEMU_TEST_FRAMES;
+
+    let text = r#"
+[package]
+name = "test"
+version = "0.1.0"
+
+[[rom]]
+name = "test"
+target = "rp2A03-nintendo-nes-ntsc"
+
+[test]
+profile = "demu"
+
+[test.demu]
+"#;
+    let manifest = CartManifest::from_toml(text).expect("parse");
+    let demu = manifest
+        .test
+        .as_ref()
+        .expect("test config")
+        .demu
+        .as_ref()
+        .expect("[test.demu] section");
+    assert_eq!(demu.frames, None, "no frames field in the manifest");
+    assert_eq!(
+        demu.frames(),
+        DEFAULT_DEMU_TEST_FRAMES,
+        "the default budget applies"
+    );
+    assert_eq!(DEFAULT_DEMU_TEST_FRAMES, 120);
+}
+
+#[test]
 fn default_target_from_rom() {
     let text = r#"
 [package]
