@@ -5,6 +5,42 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0]
+
+### Added
+
+- `cart debug` launches demu, the Op debugging emulator, with its
+  Unix-domain-socket server: it builds the ROM, requests the opc stage
+  output so the `.linked.opl` symbol table lands next to the ROM, starts
+  `demu --config <triplet> --symbols <rom>.linked.opl --serve <path> <rom>`,
+  prints `demu listening on <path>` to stdout, and waits until demu
+  exits. The socket path is `target/<triplet>/debug.demu-sock`.
+- The native demu mode in `cart test`: when the test profile names
+  `demu`, the command requests the opc stage output, forwards
+  `--dump`, `--sentinel <addr>:<value>` from `[test.sentinel.<machine>]`,
+  `--symbols`, and, when `[test.demu]` exists, `--checks <file>`. The
+  pipe carries one `run-frame <N>` command from the optional
+  `[test.demu] frames` field (default 120), so the test ROM runs before
+  demu evaluates the sentinel when the session ends, and the demu exit
+  code decides pass and fail. Other emulators keep the spawn-and-read
+  sentinel contract.
+- The optional `[test.demu]` manifest section with the `checks` and
+  `frames` fields. `checks` names the demu checks file, which cart
+  forwards to demu and does not read. `frames` sets the run-frame
+  budget, with 120 as the default.
+- The demu entry in `emulator_model_args` for every target triplet:
+  `cart run` starts `demu --config <triplet>` before the profile args
+  and the ROM path. demu does not join the default emulator matrix; a
+  project opts in through `[[run.profile]] emulator = "demu"`.
+
+### Changed
+
+- `cart test` returns the pass and fail counts to the caller. The
+  command-line behavior is unchanged: it still exits with status 2 when
+  any test fails.
+- docs/technical-design.md: the `cart debug` command, the native demu
+  test mode, and the `[test.demu]` section.
+
 ## [0.8.1]
 
 ### Fixed

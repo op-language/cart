@@ -16,6 +16,9 @@ pub struct OpcArgs {
     pub output: Option<PathBuf>,
     pub stage: OpcStage,
     pub include: Vec<String>,
+    /// Make opc write the intermediate stage files, including the
+    /// `.linked.opl` symbol table next to the output.
+    pub output_stages: bool,
 }
 
 /// The pipeline stage to run.
@@ -44,6 +47,9 @@ impl OpcArgs {
         }
         if let Some(out) = &self.output {
             cmd.arg("-o").arg(out);
+        }
+        if self.output_stages {
+            cmd.arg("--output-stages");
         }
         match self.stage {
             OpcStage::Full => {}

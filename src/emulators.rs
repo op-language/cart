@@ -300,7 +300,8 @@ pub fn default_emulator_matrix() -> Vec<EmulatorEntry> {
 ///
 /// Some emulators require an explicit model flag to run a ROM in the
 /// correct console mode. SameBoy, for example, uses `--model dmg` for
-/// Game Boy (DMG) ROMs and `--model cgb` for Game Boy Color ROMs.
+/// Game Boy (DMG) ROMs and `--model cgb` for Game Boy Color ROMs. demu
+/// selects the whole machine with `--config <triplet>` for every target.
 ///
 /// Returns an empty vector when the given emulator does not need a model
 /// flag for the given target triplet.
@@ -315,8 +316,22 @@ pub fn emulator_model_args(triplet: &str, emulator: &str) -> Vec<String> {
         ("sm83-nintendo-gameboy-color", "sameboy") => {
             vec!["--model".to_string(), "cgb".to_string()]
         }
+        (_, "demu") => vec!["--config".to_string(), triplet.to_string()],
         _ => Vec::new(),
     }
+}
+
+/// Return the sentinel flag pair that the demu emulator expects in the
+/// native `cart test` mode: `--sentinel <addr>:<value>`.
+///
+/// demu parses both halves as decimal or `0x` hex. The address must
+/// fit 32 bits and the value must fit one byte; demu rejects larger
+/// values with exit code 2.
+pub fn demu_sentinel_args(address: u64, pass_value: u64) -> Vec<String> {
+    vec![
+        "--sentinel".to_string(),
+        format!("{address:#x}:{pass_value:#x}"),
+    ]
 }
 
 /// Return the fixed arguments that `cart run` places before the run
@@ -455,6 +470,53 @@ mod tests {
     #[test]
     fn test_model_args_other_emulator_empty() {
         assert!(emulator_model_args("sm83-nintendo-gameboy", "mgba-sdl").is_empty());
+    }
+
+    #[test]
+    fn test_model_args_demu_config_flag() {
+        let args = emulator_model_args("rp2A03-nintendo-nes-ntsc", "demu");
+        assert_eq!(
+            args,
+            vec![
+                "--config".to_string(),
+                "rp2A03-nintendo-nes-ntsc".to_string()
+            ]
+        );
+    }
+
+    #[test]
+    fn test_model_args_demu_path_and_every_target() {
+        // A path to the binary matches the same way, and every target
+        // triple gets the --config form.
+        let args = emulator_prepend_args(
+            "sm83-nintendo-gameboy-color",
+            "/usr/local/bin/demu",
+            std::path::Path::new("game.gb"),
+        );
+        assert_eq!(
+            args,
+            vec![
+                "--config".to_string(),
+                "sm83-nintendo-gameboy-color".to_string()
+            ]
+        );
+    }
+
+    #[test]
+    fn test_sentinel_args_format() {
+        assert_eq!(
+            demu_sentinel_args(0x6000, 0xFF),
+            vec!["--sentinel".to_string(), "0x6000:0xff".to_string()]
+        );
+        // Decimal input renders in the hex form demu accepts.
+        assert_eq!(
+            demu_sentinel_args(49152, 63),
+            vec!["--sentinel".to_string(), "0xc000:0x3f".to_string()]
+        );
+        assert_eq!(
+            demu_sentinel_args(0, 0),
+            vec!["--sentinel".to_string(), "0x0:0x0".to_string()]
+        );
     }
 
     #[test]
