@@ -77,6 +77,37 @@ nonexistent = { version = "1.0", git = "https://example.com/nonexistent" }
 }
 
 #[test]
+fn resolve_missing_path_dependency_names_source() {
+    let tmp = tempfile::tempdir().expect("tempdir");
+    let carts_dir = tmp.path().join("carts");
+    fs::create_dir_all(&carts_dir).expect("create carts dir");
+
+    let missing = tmp.path().join("nowhere");
+
+    let manifest_text = format!(
+        r#"
+[package]
+name = "test"
+version = "0.1.0"
+
+[dependencies]
+std = {{ version = "0.1", path = "{}" }}
+"#,
+        missing.display()
+    );
+    let manifest = CartManifest::from_toml(&manifest_text).expect("parse");
+
+    let result = resolver::resolve(&manifest, &carts_dir, None);
+    assert!(result.is_err());
+    let err = result.unwrap_err().to_string();
+    assert!(err.contains("E505"));
+    assert!(
+        err.contains(missing.to_string_lossy().as_ref()),
+        "error must name the missing path dir, got: {err}"
+    );
+}
+
+#[test]
 fn resolve_version_mismatch_errors() {
     let tmp = tempfile::tempdir().expect("tempdir");
     let carts_dir = tmp.path().join("carts");
