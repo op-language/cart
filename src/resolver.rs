@@ -103,9 +103,9 @@ fn resolve_one(
 
     if !lib_manifest_path.exists() {
         return Err(anyhow::anyhow!(
-            "E505: lib '{}' not installed in {}",
+            "E505: lib '{}': Cart.toml not found in {}",
             name,
-            carts_dir.display()
+            source.display()
         ));
     }
 
